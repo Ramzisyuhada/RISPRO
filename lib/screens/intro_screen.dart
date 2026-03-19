@@ -1,0 +1,205 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import '../widgets/vendor_card.dart';
+import '../data/vendor_data.dart';
+
+class SimulationIntroScreen extends StatefulWidget {
+  const SimulationIntroScreen({super.key});
+
+  @override
+  State<SimulationIntroScreen> createState() => _SimulationIntroScreenState();
+}
+
+class _SimulationIntroScreenState extends State<SimulationIntroScreen> {
+
+  int step = 0;
+  String displayedText = "";
+
+  final List<Map<String, String>> scenes = [
+    {
+      "text": "Anda ditunjuk sebagai Project Manager proyek layanan publik digital.",
+      "char": "assets/AssetGame/player_normal.png"
+    },
+    {
+      "text": "Proyek ini melibatkan banyak stakeholder dan risiko.",
+      "char": "assets/AssetGame/player_thinking.png"
+    },
+    {
+      "text": "Keputusan Anda akan mempengaruhi keberhasilan proyek.",
+      "char": "assets/AssetGame/player_woried.png"
+    },
+    {
+      "text": "Apakah Anda siap mengambil keputusan?",
+      "char": "assets/AssetGame/player_confident.png"
+    },
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _startTyping();
+  }
+
+  void _startTyping() async {
+    displayedText = "";
+    final fullText = scenes[step]["text"]!;
+
+    for (int i = 0; i < fullText.length; i++) {
+      await Future.delayed(const Duration(milliseconds: 20));
+      if (!mounted) return;
+      setState(() {
+        displayedText += fullText[i];
+      });
+    }
+  }
+
+  void nextStep() {
+    if (step < scenes.length - 1) {
+      setState(() => step++);
+      _startTyping();
+    } else {
+      Navigator.pushNamed(context, '/scene2');
+    }
+  }
+
+  /// 🔥 MODAL DETAIL
+  void showVendorDetail() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) {
+        return Container(
+          padding: const EdgeInsets.all(20),
+          height: MediaQuery.of(context).size.height * 0.6,
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+
+          child: DefaultTextStyle(
+            style: const TextStyle(color: Colors.black),
+            child: Column(
+              children: [
+
+                const Text(
+                  "Vendor Profile",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+
+                const SizedBox(height: 20),
+
+                Image.asset(VendorData.image, height: 120),
+
+                const SizedBox(height: 16),
+
+                Text(
+                  VendorData.name,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+
+                const SizedBox(height: 12),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.star, color: Colors.amber),
+                    const SizedBox(width: 4),
+                    Text(VendorData.rating),
+
+                    const SizedBox(width: 16),
+
+                    const Icon(Icons.inventory_2, color: Colors.blue),
+                    const SizedBox(width: 4),
+                    Text("${VendorData.project} proyek"),
+
+                    const SizedBox(width: 16),
+
+                    const Icon(Icons.schedule, color: Colors.green),
+                    const SizedBox(width: 4),
+                    const Text("95%"),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ).animate().slideY(begin: 1, duration: 400.ms);
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scene = scenes[step];
+
+    return Scaffold(
+      body: GestureDetector(
+        onTap: nextStep,
+        child: Stack(
+          children: [
+
+            /// BACKGROUND
+            Positioned.fill(
+              child: Image.asset(
+                'assets/AssetGame/Background Game.png',
+                fit: BoxFit.cover,
+              ),
+            ),
+
+            Positioned.fill(
+              child: Container(
+                color: Colors.black.withOpacity(0.05),
+              ),
+            ),
+
+            /// 🔥 GLOBAL VENDOR CARD
+            Positioned(
+              top: 60,
+              left: 0,
+              right: 0,
+              child: VendorCard(
+                onTap: showVendorDetail,
+              ),
+            ),
+
+            /// PLAYER
+            Align(
+              alignment: Alignment.center,
+              child: Image.asset(
+                scene["char"]!,
+                height: 260,
+              ),
+            ),
+
+            /// DIALOG
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Container(
+                margin: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: DefaultTextStyle(
+                  style: const TextStyle(color: Colors.black),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(displayedText, textAlign: TextAlign.center),
+                      const SizedBox(height: 10),
+                      const Text(
+                        "Tap untuk lanjut...",
+                        style: TextStyle(fontSize: 11),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
