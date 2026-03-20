@@ -1,161 +1,249 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:rispro/domain/service/simulation_ai_service.dart';
 
-class Scene7Screen extends StatelessWidget {
-  const Scene7Screen({super.key});
+class Scene7Screen extends StatefulWidget {
+  final Map total;
+
+  const Scene7Screen({super.key, required this.total});
+
+  @override
+ State<Scene7Screen> createState() => _Scene7ScreenState();
+}
+
+class _Scene7ScreenState extends State<Scene7Screen> {
+  final aiService = SimulationAIService();
+
+  Map<String, dynamic>? result;
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    loadAI();
+  }
+
+  /// 🔥 LOAD AI
+  void loadAI() async {
+    try {
+      final res = await aiService.generateFinalAnalysisScane7(widget.total);
+
+      setState(() {
+        result = normalizeResult(
+          Map<String, dynamic>.from(res),
+        );
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        result = normalizeResult(null);
+        isLoading = false;
+      });
+    }
+  }
+
+  /// 🔥 NORMALIZE (ANTI ERROR)
+  Map<String, dynamic> normalizeResult(Map<String, dynamic>? raw) {
+    final data = raw ?? {};
+
+    final score = data["score"] is Map
+        ? Map<String, dynamic>.from(data["score"])
+        : {};
+
+    return {
+      "profile": data["profile"] ?? "Risk Neutral",
+      "score": {
+        "avoidance": score["avoidance"] ?? 33,
+        "balance": score["balance"] ?? 34,
+        "aggressive": score["aggressive"] ?? 33,
+      },
+      "riskLevel": data["riskLevel"] ?? "medium",
+      "efficiency": data["efficiency"] ?? "medium",
+      "publicScore": data["publicScore"] ?? 50,
+      "analysis": data["analysis"] ?? "Tidak ada analisis.",
+      "impactSummary": data["impactSummary"] ?? "-",
+      "recommendation": data["recommendation"] ?? "-",
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final profile = result!["profile"];
+    final score = result!["score"];
+
+    final avoidance = (score["avoidance"] as num).toDouble() / 100;
+    final balance = (score["balance"] as num).toDouble() / 100;
+    final aggressive = (score["aggressive"] as num).toDouble() / 100;
+
+    final riskLevel = result!["riskLevel"];
+    final efficiency = result!["efficiency"];
+    final publicScore = result!["publicScore"];
+
+    final analysis = result!["analysis"];
+    final summary = result!["impactSummary"];
+    final recommendation = result!["recommendation"];
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+        child: SingleChildScrollView( // 🔥 FIX OVERFLOW
+          physics: const BouncingScrollPhysics(),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
 
-              /// 🎓 TITLE
-              const Text(
-                "Analisis Profil Risiko",
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              /// 📊 METRICS
-              Row(
-                children: [
-                  _metricCard("Cost", "Tinggi", Colors.red),
-                  _metricCard("Risk", "Sedang", Colors.orange),
-                  _metricCard("Account", "Baik", Colors.green),
-                ],
-              ),
-
-              const SizedBox(height: 20),
-
-              /// 🧠 RISK PROFILE
-              _riskCard(
-                title: "Risk Averse",
-                subtitle: "Cenderung menghindari risiko",
-                percent: 0.6,
-                color: Colors.blue,
-                isMain: true,
-              ),
-
-              _riskCard(
-                title: "Risk Neutral",
-                subtitle: "Seimbang dalam keputusan",
-                percent: 0.1,
-                color: Colors.orange,
-              ),
-
-              _riskCard(
-                title: "Risk Seeker",
-                subtitle: "Berani mengambil risiko tinggi",
-                percent: 0.3,
-                color: Colors.red,
-              ),
-
-              const SizedBox(height: 20),
-
-              /// 🧠 ANALISIS
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Analisis Pola Keputusan",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      "Anda cenderung berhati-hati dalam mengambil keputusan.\n"
-                      "Anda lebih mengutamakan keamanan dibanding risiko tinggi.\n\n"
-                      "Namun Anda tetap mampu beradaptasi dalam kondisi tertentu.",
-                      style: TextStyle(
-                        color: Colors.black87,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
-                ),
-              ).animate().fade(duration: 400.ms).slideY(begin: 0.2),
-
-              const Spacer(),
-
-              /// 🎓 KESIMPULAN
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE3F2FD),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: const Text(
-                  "Kesimpulan:\n"
-                  "Anda termasuk Risk Averse, yaitu tipe yang cenderung menghindari risiko dan memilih keputusan yang aman.",
+                /// 🎓 TITLE
+                const Text(
+                  "Analisis Profil Risiko",
                   style: TextStyle(
-                    color: Colors.black87,
-                    height: 1.4,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
                   ),
                 ),
-              ).animate().fade(duration: 500.ms),
 
-              const SizedBox(height: 20),
+                const SizedBox(height: 20),
 
-              /// 🔁 BUTTON
-              GestureDetector(
-                onTap: () {
-                  Navigator.pushNamedAndRemoveUntil(
-                    context,
-                    '/scene8',
-                    (route) => false,
-                  );
-                },
-                child: Container(
-                  width: double.infinity,
+                /// 📊 METRICS
+                Row(
+                  children: [
+                    _metricCard("Risk", riskLevel.toUpperCase(), Colors.red),
+                    _metricCard("Efficiency", efficiency.toUpperCase(), Colors.orange),
+                    _metricCard("Score", "$publicScore", Colors.green),
+                  ],
+                ),
+
+                const SizedBox(height: 20),
+
+                /// 🧠 RISK PROFILE
+                _riskCard(
+                  title: "Risk Averse",
+                  subtitle: "Cenderung menghindari risiko",
+                  percent: avoidance,
+                  color: Colors.blue,
+                  isMain: profile == "Risk Averse",
+                ),
+
+                _riskCard(
+                  title: "Risk Neutral",
+                  subtitle: "Seimbang dalam keputusan",
+                  percent: balance,
+                  color: Colors.orange,
+                  isMain: profile == "Risk Neutral",
+                ),
+
+                _riskCard(
+                  title: "Risk Seeker",
+                  subtitle: "Berani mengambil risiko tinggi",
+                  percent: aggressive,
+                  color: Colors.red,
+                  isMain: profile == "Risk Seeker",
+                ),
+
+                const SizedBox(height: 20),
+
+                /// 🧠 ANALISIS
+                Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1E3A8A),
-                    borderRadius: BorderRadius.circular(14),
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                  child: const Text(
-                    "Lanjut Tahap Terakhir",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "Analisis Pola Keputusan",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        analysis,
+                        style: const TextStyle(
+                          color: Colors.black87,
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
+                  ),
+                ).animate().fade(duration: 400.ms).slideY(begin: 0.2),
+
+                const SizedBox(height: 20),
+
+                /// 🎓 KESIMPULAN
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE3F2FD),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Text(
+                    "Kesimpulan:\n$summary\n\nRekomendasi:\n$recommendation",
+                    style: const TextStyle(
+                      color: Colors.black87,
+                      height: 1.4,
+                    ),
+                  ),
+                ).animate().fade(duration: 500.ms),
+
+                const SizedBox(height: 20),
+
+                /// 🔁 BUTTON
+                GestureDetector(
+                  onTap: () {
+                   Navigator.pushNamedAndRemoveUntil(
+  context,
+  '/scene6',
+  (route) => false,
+  arguments: {
+    "total": widget.total,
+  },
+);
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1E3A8A),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const Text(
+                      "Lanjut Tahap Terakhir",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  /// 🔥 METRIC CARD (FIXED)
+  /// 🔥 METRIC CARD
   Widget _metricCard(String title, String value, Color color) {
     return Expanded(
       child: Container(
@@ -189,7 +277,7 @@ class Scene7Screen extends StatelessWidget {
     );
   }
 
-  /// 🔥 RISK CARD (UPGRADE)
+  /// 🔥 RISK CARD
   Widget _riskCard({
     required String title,
     required String subtitle,
@@ -207,15 +295,6 @@ class Scene7Screen extends StatelessWidget {
           color: isMain ? color : Colors.black12,
           width: isMain ? 2 : 1,
         ),
-        boxShadow: isMain
-            ? [
-                BoxShadow(
-                  color: color.withOpacity(0.2),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ]
-            : [],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -256,7 +335,7 @@ class Scene7Screen extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
             child: LinearProgressIndicator(
-              value: percent,
+              value: percent.clamp(0.0, 1.0),
               minHeight: 10,
               color: color,
               backgroundColor: color.withOpacity(0.2),

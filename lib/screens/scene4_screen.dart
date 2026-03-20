@@ -47,7 +47,7 @@ class _Scene4ScreenState extends State<Scene4Screen> {
       widget.lastChoice,
       widget.impact,
     );
-
+    print("Scene 4 : " + result.toString());
     setState(() {
       data = result;
       fullText = result["scene"];

@@ -45,7 +45,7 @@ class _Scene5ScreenState extends State<Scene5Screen> {
       widget.vendor,
       widget.prevImpact,
     );
-
+    print("Analysis " +result.toString());
     setState(() {
       data = result;
       fullText = result["scene"];
@@ -91,17 +91,29 @@ class _Scene5ScreenState extends State<Scene5Screen> {
   void goNext() {
     if (!readyToNext) return;
 
-    Navigator.pushReplacementNamed(
-  context,
-  '/scene6',
-  arguments: {
-    "total": {
-      "cost": widget.prevImpact["cost"],
-      "time": widget.prevImpact["time"],
-      "risk": widget.prevImpact["risk"],
-    }
-  },
-);
+//     Navigator.pushReplacementNamed(
+//   context,
+//   '/scene6',
+//   arguments: {
+//     "total": {
+//       "cost": widget.prevImpact["cost"],
+//       "time": widget.prevImpact["time"],
+//       "risk": widget.prevImpact["risk"],
+//     }
+//   },
+// );
+
+Navigator.pushReplacementNamed(
+    context,
+    '/scene7',
+    arguments: {
+      "total": {
+        "cost": widget.prevImpact["cost"] ?? 0,
+        "time": widget.prevImpact["time"] ?? 0,
+        "risk": widget.prevImpact["risk"] ?? 0,
+      }
+    },
+  );
   }
 
   /// 🔥 warna feedback

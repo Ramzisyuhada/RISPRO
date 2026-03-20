@@ -42,7 +42,7 @@ Map? selectedChoice;
       fullText = result["scene"];
       isLoading = false;
     });
-
+    print(data);
     _typingEffect();
   }
 

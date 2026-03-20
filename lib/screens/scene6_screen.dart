@@ -25,32 +25,60 @@ class _Scene6ScreenState extends State<Scene6Screen> {
     loadAnalysis();
   }
 
+  int clamp(int value) => value.clamp(0, 100);
+
+  int calculateScore(Map total) {
+    int cost = clamp(total["cost"] ?? 0);
+    int time = clamp(total["time"] ?? 0);
+    int risk = clamp(total["risk"] ?? 0);
+
+    int score = 100;
+    score -= (cost * 0.3).toInt();
+    score -= (time * 0.3).toInt();
+    score -= (risk * 0.4).toInt();
+
+    return clamp(score);
+  }
+
   void loadAnalysis() async {
-    final result = await aiService.generateFinalAnalysis(widget.total);
+    try {
+      final res = await aiService.generateFinalAnalysis(widget.total);
+      final localScore = calculateScore(widget.total);
 
-    final int score =
-        ((100 - (widget.total["risk"] ?? 0)).clamp(0, 100)).toInt();
+      setState(() {
+        analysis = Map<String, dynamic>.from(res);
+        analysis!["publicScore"] = localScore;
+        isLoading = false;
+      });
 
-    setState(() {
-      analysis = result;
-      isLoading = false;
-    });
+      startScoreAnimation(localScore);
+    } catch (e) {
+      final fallback = calculateScore(widget.total);
 
-    startScoreAnimation(score);
+      setState(() {
+        analysis = {
+          "publicScore": fallback,
+          "summary": "Tidak dapat dianalisis.",
+          "mitigation": "Mitigasi tidak optimal.",
+          "recommendation": "Perbaiki strategi.",
+          "learningInsight":
+              "Setiap keputusan memiliki konsekuensi nyata.",
+        };
+        isLoading = false;
+      });
+
+      startScoreAnimation(fallback);
+    }
   }
 
   void startScoreAnimation(int finalScore) async {
     for (int i = 0; i <= finalScore; i++) {
-      await Future.delayed(const Duration(milliseconds: 15));
+      await Future.delayed(const Duration(milliseconds: 10));
       if (!mounted) return;
-
-      setState(() {
-        animatedScore = i;
-      });
+      setState(() => animatedScore = i);
     }
   }
 
-  /// 🔥 COLOR & RANK
   Color getScoreColor(int score) {
     if (score < 40) return Colors.red;
     if (score < 70) return Colors.orange;
@@ -58,177 +86,152 @@ class _Scene6ScreenState extends State<Scene6Screen> {
   }
 
   String getRank(int score) {
-    if (score < 40) return "❌ Poor Decision";
-    if (score < 70) return "⚠ Average";
-    return "🏆 Excellent";
+    if (score < 40) return "❌ Buruk";
+    if (score < 70) return "⚠ Cukup";
+    return "🏆 Sangat Baik";
+  }
+
+  String getCharacterImage(int score) {
+    if (score < 40) return "assets/AssetGame/player_woried.png";
+    if (score < 70) return "assets/AssetGame/player_thinking.png";
+    return "assets/AssetGame/player_confident.png";
   }
 
   @override
   Widget build(BuildContext context) {
-    final cost = widget.total["cost"] ?? 0;
-    final time = widget.total["time"] ?? 0;
-    final risk = widget.total["risk"] ?? 0;
+    final cost = clamp(widget.total["cost"] ?? 0);
+    final time = clamp(widget.total["time"] ?? 0);
+    final risk = clamp(widget.total["risk"] ?? 0);
 
-    final scoreColor = getScoreColor(animatedScore);
-    final rank = getRank(animatedScore);
+    final score = clamp(analysis?["publicScore"] ?? 0);
+    final color = getScoreColor(score);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
 
-              /// 🔥 TITLE
-              const Text(
-                "📊 Dashboard Hasil",
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1E293B),
-                ),
-              ).animate().fade().slideY(begin: -0.2),
-
-              const SizedBox(height: 20),
-
-              /// 🔥 SCORE CARD
+              /// 🔥 HERO SECTION
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [
-                      scoreColor.withOpacity(0.7),
-                      scoreColor,
-                    ],
+                    colors: [color.withOpacity(0.7), color],
                   ),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(28),
                   boxShadow: [
                     BoxShadow(
-                      color: scoreColor.withOpacity(0.4),
-                      blurRadius: 25,
+                      color: color.withOpacity(0.4),
+                      blurRadius: 30,
                     )
                   ],
                 ),
                 child: Column(
                   children: [
-                    const Text(
-                      "Public Accountability Score",
-                      style: TextStyle(color: Colors.white70),
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 400),
+                      child: Image.asset(
+                        getCharacterImage(score),
+                        key: ValueKey(score),
+                        height: 100,
+                      ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
                     Text(
                       "$animatedScore",
                       style: const TextStyle(
-                        fontSize: 40,
+                        fontSize: 44,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
                     ).animate().scale().fade(),
                     const SizedBox(height: 6),
                     Text(
-                      rank,
+                      getRank(score),
                       style: const TextStyle(
                         color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
                 ),
-              ).animate().scale().fade(),
+              ).animate().fade().scale(),
 
               const SizedBox(height: 20),
 
-              /// 🔥 METRICS
-              _bar("Cost Overrun", cost, Colors.red),
-              _bar("Time Delay", time, Colors.orange),
-              _bar("Risk Exposure", risk, Colors.blue),
+              /// 🔥 IMPACT CARDS
+              Row(
+                children: [
+                  Expanded(child: _impactCard("Cost", cost, Colors.red)),
+                  const SizedBox(width: 10),
+                  Expanded(child: _impactCard("Time", time, Colors.orange)),
+                  const SizedBox(width: 10),
+                  Expanded(child: _impactCard("Risk", risk, Colors.blue)),
+                ],
+              ),
 
               const SizedBox(height: 20),
 
-              /// 🔥 ANALYSIS CARD (UPGRADED)
-              isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : Container(
-                      padding: const EdgeInsets.all(18),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 15,
-                          )
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
+              if (isLoading)
+                const CircularProgressIndicator()
+              else ...[
 
-                          _analysisItem(
-                            icon: Icons.psychology,
-                            title: "Gaya",
-                            value: analysis?["style"],
-                            color: Colors.purple,
-                          ),
+                _sectionCard("📊 Dampak Keputusan", analysis?["summary"]),
+                _sectionCard("🛠 Efektivitas Mitigasi", analysis?["mitigation"]),
+                _sectionCard("📈 Evaluasi Strategi", analysis?["recommendation"]),
 
-                          const Divider(height: 20),
+                const SizedBox(height: 16),
 
-                          _analysisItem(
-                            icon: Icons.bar_chart,
-                            title: "Ringkasan",
-                            value: analysis?["summary"],
-                            color: Colors.blue,
-                          ),
-
-                          const Divider(height: 20),
-
-                          _analysisItem(
-                            icon: Icons.lightbulb,
-                            title: "Rekomendasi",
-                            value: analysis?["recommendation"],
-                            color: Colors.amber,
-                          ),
-
-                          const SizedBox(height: 16),
-
-                          Wrap(
-                            spacing: 10,
-                            runSpacing: 10,
-                            children: [
-                              _badgeModern("Risk", analysis?["riskLevel"]),
-                              _badgeModern("Efficiency",
-                                  analysis?["efficiency"]),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ).animate().fade().slideY(begin: 0.2),
-
-              const Spacer(),
-
-              /// 🔥 BUTTON
-              Center(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2563EB),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 30, vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                /// 🔥 INSIGHT
+                Container(
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                      color: color.withOpacity(0.35),
                     ),
                   ),
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/scene7');
-                  },
-                  child: const Text(
-                    "Lanjut",
-                    style: TextStyle(color: Colors.white),
+                  child: Row(
+                    children: [
+                      Icon(Icons.lightbulb, color: color),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          analysis?["learningInsight"] ?? "-",
+                          style: const TextStyle(
+                            color: Color(0xFF1E293B),
+                            height: 1.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ).animate().fade().slideY(begin: 0.2),
+              ],
+
+              const SizedBox(height: 30),
+
+              /// 🔥 BUTTON
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: color,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 40, vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
                   ),
                 ),
-              )
+                onPressed: () {
+                  Navigator.pushNamedAndRemoveUntil(
+                      context, '/', (route) => false);
+                },
+                child: const Text("Selesai"),
+              ),
             ],
           ),
         ),
@@ -236,138 +239,81 @@ class _Scene6ScreenState extends State<Scene6Screen> {
     );
   }
 
-  /// 🔥 BAR ANIMASI
-  Widget _bar(String title, int value, Color color) {
-    final percent = (value / 100).clamp(0.0, 1.0);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                color: Color(0xFF1E293B),
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            Text(
-              "${(percent * 100).toInt()}%",
-              style: TextStyle(
-                color: color,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        TweenAnimationBuilder<double>(
-          tween: Tween(begin: 0, end: percent),
-          duration: const Duration(milliseconds: 800),
-          builder: (context, value, _) {
-            return ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: LinearProgressIndicator(
-                value: value,
-                minHeight: 12,
-                color: color,
-                backgroundColor: color.withOpacity(0.15),
-              ),
-            );
-          },
-        ),
-        const SizedBox(height: 14),
-      ],
-    ).animate().fade().slideX(begin: -0.2);
-  }
-
-  /// 🔥 ANALYSIS ITEM
-  Widget _analysisItem({
-    required IconData icon,
-    required String title,
-    required String? value,
-    required Color color,
-  }) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.12),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(icon, size: 18, color: color),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1E293B),
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                value ?? "-",
-                style: const TextStyle(
-                  color: Color(0xFF475569),
-                  height: 1.5,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// 🔥 BADGE MODERN
-  Widget _badgeModern(String label, String? value) {
-    Color color;
-    IconData icon;
-
-    switch (value) {
-      case "high":
-        color = Colors.red;
-        icon = Icons.trending_up;
-        break;
-      case "medium":
-        color = Colors.orange;
-        icon = Icons.trending_flat;
-        break;
-      default:
-        color = Colors.green;
-        icon = Icons.check_circle;
-    }
-
+  /// 🔥 IMPACT CARD
+  Widget _impactCard(String title, int value, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.4)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+          ),
+        ],
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
+      child: Column(
         children: [
-          Icon(icon, size: 16, color: color),
-          const SizedBox(width: 6),
           Text(
-            "$label: $value",
+            title,
+            style: const TextStyle(
+              fontSize: 12,
+              color: Colors.black54,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            "$value%",
             style: TextStyle(
-              color: color,
               fontWeight: FontWeight.bold,
+              fontSize: 16,
+              color: color,
             ),
           ),
         ],
       ),
-    ).animate().scale().fade();
+    );
+  }
+
+  /// 🔥 SECTION CARD (FIX KONTRAS)
+  Widget _sectionCard(String title, String? value) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+              color: Color(0xFF1E293B),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value ?? "-",
+            style: const TextStyle(
+              color: Color(0xFF475569),
+              height: 1.5,
+              fontSize: 13,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

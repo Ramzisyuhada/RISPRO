@@ -112,9 +112,14 @@ case '/scene4':
     builder: (_) => Scene6Screen(
       total: args["total"],
     ),
+  );case '/scene7':
+  final args = (settings.arguments ?? {}) as Map;
+
+  return MaterialPageRoute(
+    builder: (_) => Scene7Screen(
+      total: args["total"] ?? {},
+    ),
   );
-      case '/scene7':
-        return MaterialPageRoute(builder: (_) => const Scene7Screen());
 
       case '/scene8':
         return MaterialPageRoute(builder: (_) => const Scene8Screen());
