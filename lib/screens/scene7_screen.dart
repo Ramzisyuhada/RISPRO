@@ -110,16 +110,16 @@ class _Scene7ScreenState extends State<Scene7Screen> {
                   ),
                 ),
 
-                const SizedBox(height: 20),
+                // const SizedBox(height: 20),
 
-                /// 📊 METRICS
-                Row(
-                  children: [
-                    _metricCard("Risk", riskLevel.toUpperCase(), Colors.red),
-                    _metricCard("Efficiency", efficiency.toUpperCase(), Colors.orange),
-                    _metricCard("Score", "$publicScore", Colors.green),
-                  ],
-                ),
+                // /// 📊 METRICS
+                // Row(
+                //   children: [
+                //     _metricCard("Risk", riskLevel.toUpperCase(), Colors.red),
+                //     _metricCard("Efficiency", efficiency.toUpperCase(), Colors.orange),
+                //     _metricCard("Score", "$publicScore", Colors.green),
+                //   ],
+                // ),
 
                 const SizedBox(height: 20),
 
