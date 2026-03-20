@@ -3,8 +3,13 @@ import '../data/vendor_data.dart';
 
 class VendorCard extends StatelessWidget {
   final VoidCallback onTap;
+  final VendorData? vendor;
 
-  const VendorCard({super.key, required this.onTap});
+  const VendorCard({
+    super.key,
+    required this.onTap,
+    this.vendor, // tidak required
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +40,7 @@ class VendorCard extends StatelessWidget {
               ClipRRect(
                 borderRadius: BorderRadius.circular(14),
                 child: Image.asset(
-                  VendorData.image,
+                  vendor!.image,
                   height: 60,
                   width: 60,
                   fit: BoxFit.cover,
@@ -52,7 +57,7 @@ class VendorCard extends StatelessWidget {
 
                     /// TITLE
                     Text(
-                      VendorData.name,
+                      vendor!.name,
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 15,
@@ -66,7 +71,7 @@ class VendorCard extends StatelessWidget {
                         const Icon(Icons.star, color: Colors.amber, size: 18),
                         const SizedBox(width: 4),
                         Text(
-                          VendorData.rating,
+                          vendor!.rating.toString(),
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
 
@@ -75,7 +80,7 @@ class VendorCard extends StatelessWidget {
                         const Icon(Icons.inventory_2,
                             color: Colors.blue, size: 18),
                         const SizedBox(width: 4),
-                        Text("${VendorData.project} proyek"),
+                        Text("${vendor!.projects} proyek"),
                       ],
                     ),
 

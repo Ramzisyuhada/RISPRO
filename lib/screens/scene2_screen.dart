@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:rispro/data/vendor_data.dart';
 
 class Scene2Screen extends StatefulWidget {
-  const Scene2Screen({super.key});
+
+  final VendorData vendor;
+  const Scene2Screen({super.key,required this.vendor});
 
   @override
   State<Scene2Screen> createState() => _Scene2ScreenState();
@@ -11,7 +14,6 @@ class Scene2Screen extends StatefulWidget {
 class _Scene2ScreenState extends State<Scene2Screen> {
   static const Color primary = Color(0xFF1E3A8A);
   static const Color textPrimary = Color(0xFF0F172A);
-
   /// 🔥 LIST BISA BERUBAH
   List<Map<String, String>> risks = [
     {"text": "Data Vendor", "type": "certainty"},
@@ -48,7 +50,7 @@ class _Scene2ScreenState extends State<Scene2Screen> {
     /// AUTO NEXT
     if (resultMap.length == 5) {
       Future.delayed(const Duration(milliseconds: 800), () {
-        Navigator.pushNamed(context, '/scene3');
+        Navigator.pushNamed(context, '/scene3', arguments: widget.vendor);
       });
     }
   }
@@ -169,7 +171,7 @@ class _Scene2ScreenState extends State<Scene2Screen> {
                   minimumSize: const Size(double.infinity, 50),
                 ),
                 onPressed: () {
-                  Navigator.pushNamed(context, '/scene3');
+                  Navigator.pushNamed(context, '/scene3',arguments: widget.vendor);
                 },
                 child: const Text("Lanjut"),
               ),
