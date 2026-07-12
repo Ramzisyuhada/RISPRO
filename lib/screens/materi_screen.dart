@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:video_player/video_player.dart';
+import 'package:rispro/screens/ppt_screen.dart';
+import 'package:rispro/screens/video_screen.dart';
 
 class MateriScreen extends StatefulWidget {
   const MateriScreen({super.key});
@@ -10,37 +11,10 @@ class MateriScreen extends StatefulWidget {
 }
 
 class _MateriScreenState extends State<MateriScreen> {
-
   static const Color primary = Color(0xFF1E3A8A);
   static const Color bg = Color(0xFFF8FAFC);
   static const Color textPrimary = Color(0xFF0F172A);
   static const Color textSecondary = Color(0xFF64748B);
-
-  late VideoPlayerController _videoController;
-
-  final List<String> slides = [
-    'assets/ppt/1.png',
-    'assets/ppt/2.png',
-    'assets/ppt/3.png',
-  ];
-
-  int currentSlide = 0;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _videoController = VideoPlayerController.asset('assets/video/Video.mp4')
-      ..initialize().then((_) {
-        setState(() {});
-      });
-  }
-
-  @override
-  void dispose() {
-    _videoController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -64,24 +38,46 @@ class _MateriScreenState extends State<MateriScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
             /// 📘 INTRO
             _sectionTitle("Pengantar"),
             _card(
               "Manajemen risiko membantu pengambilan keputusan dalam kondisi certainty, risk, dan uncertainty.",
             ).animate().fade(),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 30),
 
-            /// 📊 PPT (IMAGE SLIDER)
-            _sectionTitle("Materi PPT"),
-            _pptViewer().animate().fade(delay: 200.ms),
-
-            const SizedBox(height: 20),
-
-            /// 🎥 VIDEO INTERNAL
-            _sectionTitle("Video Pembelajaran"),
-            _videoPlayer().animate().fade(delay: 300.ms),
+            /// 📚 MATERI MENU
+            _sectionTitle("Pilih Materi"),
+            const SizedBox(height: 15),
+            Row(
+              children: [
+                Expanded(
+                  child: _materiCard(
+                    icon: Icons.picture_in_picture_alt,
+                    title: "Slide PPT",
+                    description: "Lihat materi dalam bentuk slide presentasi",
+                    color: Colors.blue,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const PptScreen()),
+                    ),
+                  ).animate().fade(delay: 200.ms).scale(),
+                ),
+                const SizedBox(width: 15),
+                Expanded(
+                  child: _materiCard(
+                    icon: Icons.play_circle_fill,
+                    title: "Video",
+                    description: "Tonton video pembelajaran interaktif",
+                    color: Colors.red,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const VideoScreen()),
+                    ),
+                  ).animate().fade(delay: 300.ms).scale(),
+                ),
+              ],
+            ),
 
             const SizedBox(height: 30),
           ],
@@ -120,102 +116,63 @@ class _MateriScreenState extends State<MateriScreen> {
     );
   }
 
-  /// 📊 PPT VIEWER (IMAGE BASED)
-  Widget _pptViewer() {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        children: [
-
-          /// IMAGE
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: Image.asset(
-              slides[currentSlide],
-              fit: BoxFit.cover,
+  /// 🔹 MATERI CARD BUTTON
+  Widget _materiCard({
+    required IconData icon,
+    required String title,
+    required String description,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: color.withOpacity(0.3),
+            width: 2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
-          ),
-
-          const SizedBox(height: 10),
-
-          /// SLIDER CONTROL
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              IconButton(
-                onPressed: currentSlide > 0
-                    ? () {
-                        setState(() {
-                          currentSlide--;
-                        });
-                      }
-                    : null,
-                icon: const Icon(Icons.arrow_back),
-              ),
-              Text(
-                "${currentSlide + 1}/${slides.length}",
-                style: const TextStyle(color: textSecondary),
-              ),
-              IconButton(
-                onPressed: currentSlide < slides.length - 1
-                    ? () {
-                        setState(() {
-                          currentSlide++;
-                        });
-                      }
-                    : null,
-                icon: const Icon(Icons.arrow_forward),
-              ),
-            ],
-          )
-        ],
-      ),
-    );
-  }
-
-  /// 🎥 VIDEO PLAYER INTERNAL
-  Widget _videoPlayer() {
-    if (!_videoController.value.isInitialized) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    return Column(
-      children: [
-        AspectRatio(
-          aspectRatio: _videoController.value.aspectRatio,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: VideoPlayer(_videoController),
-          ),
-        ),
-
-        const SizedBox(height: 10),
-
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            IconButton(
-              icon: Icon(
-                _videoController.value.isPlaying
-                    ? Icons.pause
-                    : Icons.play_arrow,
-                color: primary,
-              ),
-              onPressed: () {
-                setState(() {
-                  _videoController.value.isPlaying
-                      ? _videoController.pause()
-                      : _videoController.play();
-                });
-              },
-            )
           ],
-        )
-      ],
+        ),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              size: 40,
+              color: color,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: textPrimary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              description,
+              style: const TextStyle(
+                fontSize: 11,
+                color: textSecondary,
+                height: 1.4,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

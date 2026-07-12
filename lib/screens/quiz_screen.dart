@@ -21,37 +21,307 @@ class _QuizScreenState extends State<QuizScreen> {
   int? selectedIndex;
 
   final List<Map<String, dynamic>> questions = [
-    {
-      "question": "Apa itu kondisi certainty?",
-      "options": [
-        "Tidak ada informasi",
-        "Informasi lengkap",
-        "Tidak pasti",
-        "Semua benar"
-      ],
-      "answer": 1
-    },
-    {
-      "question": "Contoh risk adalah?",
-      "options": [
-        "Cuaca ekstrem",
-        "Keterlambatan material",
-        "Bencana alam",
-        "Tidak diketahui"
-      ],
-      "answer": 1
-    },
-    {
-      "question": "Uncertainty berarti?",
-      "options": [
-        "Data lengkap",
-        "Pasti",
-        "Data minim",
-        "Terukur"
-      ],
-      "answer": 2
-    },
-  ];
+  {
+    "question": "Proyek sektor publik adalah kegiatan yang...",
+    "options": [
+      "Dilaksanakan oleh perusahaan swasta untuk memperoleh keuntungan",
+      "Dikelola oleh pemerintah dan menggunakan anggaran publik",
+      "Dilaksanakan oleh organisasi internasional",
+      "Dilakukan oleh masyarakat tanpa campur tangan pemerintah"
+    ],
+    "answer": 1
+  },
+  {
+    "question": "Tujuan utama proyek sektor publik adalah...",
+    "options": [
+      "Meningkatkan keuntungan perusahaan",
+      "Memberikan manfaat bagi masyarakat",
+      "Mengurangi jumlah pegawai pemerintah",
+      "Mengembangkan bisnis swasta"
+    ],
+    "answer": 1
+  },
+  {
+    "question": "Berikut yang termasuk contoh proyek sektor publik adalah...",
+    "options": [
+      "Pembangunan pabrik swasta",
+      "Pembangunan rumah sakit pemerintah",
+      "Pembukaan restoran",
+      "Pembangunan pusat perbelanjaan"
+    ],
+    "answer": 1
+  },
+  {
+    "question": "Salah satu karakteristik proyek sektor publik adalah...",
+    "options": [
+      "Tidak diawasi pemerintah",
+      "Menggunakan dana pribadi",
+      "Melibatkan banyak stakeholder",
+      "Tidak membutuhkan perencanaan"
+    ],
+    "answer": 2
+  },
+  {
+    "question": "Proyek sektor publik memiliki tingkat risiko tinggi karena...",
+    "options": [
+      "Tidak memerlukan pengawasan",
+      "Dipengaruhi faktor sosial dan politik",
+      "Tidak membutuhkan dana",
+      "Tidak memiliki tujuan jelas"
+    ],
+    "answer": 1
+  },
+  {
+    "question": "Berikut yang bukan termasuk kompleksitas proyek sektor publik adalah...",
+    "options": [
+      "Keterbatasan anggaran",
+      "Perubahan regulasi",
+      "Konflik kepentingan",
+      "Stabilitas pasar saham"
+    ],
+    "answer": 3
+  },
+  {
+    "question": "Risiko dalam proyek dapat berdampak pada...",
+    "options": [
+      "Biaya, waktu, dan mutu proyek",
+      "Jumlah pegawai",
+      "Lokasi proyek",
+      "Warna bangunan proyek"
+    ],
+    "answer": 0
+  },
+  {
+    "question": "Risiko proyek dapat didefinisikan sebagai...",
+    "options": [
+      "Mengukur keberhasilan proyek",
+      "Kemungkinan terjadinya peristiwa yang menghambat tujuan proyek",
+      "Rencana kerja proyek",
+      "Strategi pemasaran proyek"
+    ],
+    "answer": 1
+  },
+  {
+    "question": "Manajemen risiko adalah proses untuk...",
+    "options": [
+      "Menghilangkan semua risiko",
+      "Mengidentifikasi dan mengendalikan risiko",
+      "Menghindari semua proyek",
+      "Mengurangi jumlah pekerja"
+    ],
+    "answer": 1
+  },
+  {
+    "question": "Tujuan utama manajemen risiko adalah...",
+    "options": [
+      "Menghilangkan seluruh proyek",
+      "Memaksimalkan biaya proyek",
+      "Meminimalkan dampak negatif risiko",
+      "Mengurangi jumlah stakeholder"
+    ],
+    "answer": 2
+  },
+  {
+    "question": "Berikut tahapan manajemen risiko yang benar adalah...",
+    "options": [
+      "Identifikasi – Analisis – Evaluasi – Penanganan",
+      "Analisis – Perencanaan – Pelaksanaan",
+      "Perencanaan – Pengawasan – Evaluasi",
+      "Identifikasi – Pelaksanaan – Evaluasi"
+    ],
+    "answer": 0
+  },
+  {
+    "question": "Tahap pertama dalam manajemen risiko adalah...",
+    "options": [
+      "Analisis risiko",
+      "Evaluasi risiko",
+      "Identifikasi risiko",
+      "Pengendalian proyek"
+    ],
+    "answer": 2
+  },
+  {
+    "question": "Tujuan utama identifikasi risiko adalah...",
+    "options": [
+      "Menghilangkan risiko",
+      "Menemukan risiko yang mungkin terjadi",
+      "Menentukan anggaran proyek",
+      "Menentukan jadwal proyek"
+    ],
+    "answer": 1
+  },
+  {
+    "question": "Contoh risiko proyek adalah...",
+    "options": [
+      "Peningkatan jumlah pegawai",
+      "Keterlambatan material",
+      "Penambahan fasilitas proyek",
+      "Peningkatan kualitas bangunan"
+    ],
+    "answer": 1
+  },
+  {
+    "question": "Analisis risiko bertujuan untuk...",
+    "options": [
+      "Menentukan biaya proyek",
+      "Mengetahui kemungkinan dan dampak risiko",
+      "Menambah jumlah pekerja",
+      "Menentukan lokasi proyek"
+    ],
+    "answer": 1
+  },
+  {
+    "question": "Salah satu metode analisis risiko adalah...",
+    "options": [
+      "Analisis pasar",
+      "Analisis probabilitas",
+      "Analisis keuntungan",
+      "Analisis promosi"
+    ],
+    "answer": 1
+  },
+  {
+    "question": "Evaluasi risiko bertujuan untuk...",
+    "options": [
+      "Menghapus semua risiko",
+      "Menentukan prioritas penanganan risiko",
+      "Menentukan jumlah pekerja",
+      "Menentukan desain proyek"
+    ],
+    "answer": 1
+  },
+  {
+    "question": "Risiko yang memiliki dampak besar terhadap proyek harus...",
+    "options": [
+      "Diabaikan",
+      "Menjadi prioritas utama",
+      "Ditunda",
+      "Dihapus dari laporan"
+    ],
+    "answer": 1
+  },
+  {
+    "question": "Risiko dalam evaluasi biasanya diklasifikasikan menjadi...",
+    "options": [
+      "Kecil dan besar",
+      "Tinggi dan rendah",
+      "Rendah, sedang, dan tinggi",
+      "Murah dan mahal"
+    ],
+    "answer": 2
+  },
+  {
+    "question": "Strategi penanganan risiko yang dilakukan dengan menghindari aktivitas berisiko disebut...",
+    "options": [
+      "Risk Transfer",
+      "Risk Avoidance",
+      "Risk Acceptance",
+      "Risk Reduction"
+    ],
+    "answer": 1
+  },
+  {
+    "question": "Strategi yang dilakukan dengan mengurangi dampak risiko disebut...",
+    "options": [
+      "Risk Reduction",
+      "Risk Avoidance",
+      "Risk Transfer",
+      "Risk Acceptance"
+    ],
+    "answer": 0
+  },
+  {
+    "question": "Strategi mengalihkan risiko kepada pihak lain disebut...",
+    "options": [
+      "Risk Reduction",
+      "Risk Avoidance",
+      "Risk Transfer",
+      "Risk Acceptance"
+    ],
+    "answer": 2
+  },
+  {
+    "question": "Contoh Risk Transfer adalah...",
+    "options": [
+      "Menghentikan proyek",
+      "Menggunakan asuransi proyek",
+      "Menunda proyek",
+      "Menambah pekerja"
+    ],
+    "answer": 1
+  },
+  {
+    "question": "Risk Acceptance dilakukan apabila...",
+    "options": [
+      "Risiko sangat besar",
+      "Risiko kecil dan sulit dihindari",
+      "Risiko tidak diketahui",
+      "Risiko tidak penting"
+    ],
+    "answer": 1
+  },
+  {
+    "question": "Dalam pengambilan keputusan, kondisi certainty terjadi ketika...",
+    "options": [
+      "Informasi tidak tersedia",
+      "Informasi lengkap tersedia",
+      "Tidak ada data sama sekali",
+      "Semua keputusan bersifat spekulatif"
+    ],
+    "answer": 1
+  },
+  {
+    "question": "Kondisi risk terjadi ketika...",
+    "options": [
+      "Informasi cukup untuk memperkirakan probabilitas",
+      "Tidak ada informasi",
+      "Semua keputusan pasti benar",
+      "Tidak ada risiko sama sekali"
+    ],
+    "answer": 0
+  },
+  {
+    "question": "Kondisi uncertainty terjadi ketika...",
+    "options": [
+      "Informasi lengkap tersedia",
+      "Probabilitas dapat dihitung dengan pasti",
+      "Informasi terbatas dan probabilitas tidak diketahui",
+      "Tidak ada keputusan yang diambil"
+    ],
+    "answer": 2
+  },
+  {
+    "question": "Individu yang cenderung menghindari risiko disebut...",
+    "options": [
+      "Risk Neutral",
+      "Risk Seeker",
+      "Risk Averse",
+      "Risk Taker"
+    ],
+    "answer": 2
+  },
+  {
+    "question": "Individu yang bersikap netral terhadap risiko disebut...",
+    "options": [
+      "Risk Neutral",
+      "Risk Seeker",
+      "Risk Avoider",
+      "Risk Analyst"
+    ],
+    "answer": 0
+  },
+  {
+    "question": "Manajemen risiko yang baik dalam proyek publik dapat meningkatkan...",
+    "options": [
+      "Pemborosan anggaran",
+      "Kegagalan proyek",
+      "Keberhasilan proyek pembangunan",
+      "Ketidakpercayaan masyarakat"
+    ],
+    "answer": 2
+  },
+];
 
   void selectAnswer(int index) {
     if (answered) return;

@@ -12,12 +12,19 @@ import 'package:rispro/screens/scene5_screen.dart';
 import 'package:rispro/screens/scene6_screen.dart';
 import 'package:rispro/screens/scene7_screen.dart';
 import 'package:rispro/screens/scene8_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'provider/game_state.dart';
 import 'screens/menu_screen.dart';
 import 'screens/game_screen.dart';
 
-void main() {
+void main() async {
+    WidgetsFlutterBinding.ensureInitialized();
+
+    await Supabase.initialize(
+    url: '',
+    anonKey: '',
+  );
   runApp(const AppRoot());
 }
 

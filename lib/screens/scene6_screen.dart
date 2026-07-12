@@ -28,9 +28,11 @@ class _Scene6ScreenState extends State<Scene6Screen> {
   int clamp(int value) => value.clamp(0, 100);
 
   int calculateScore(Map total) {
-    int cost = clamp(total["cost"] ?? 0);
-    int time = clamp(total["time"] ?? 0);
-    int risk = clamp(total["risk"] ?? 0);
+        final total1 = aiService.getTotalImpact(); // 🔥 ambil global
+
+    int cost = clamp(total1["cost"] ?? 0);
+    int time = clamp(total1["time"] ?? 0);
+    int risk = clamp(total1["risk"] ?? 0);
 
     int score = 100;
     score -= (cost * 0.3).toInt();
@@ -99,9 +101,11 @@ class _Scene6ScreenState extends State<Scene6Screen> {
 
   @override
   Widget build(BuildContext context) {
-    final cost = clamp(widget.total["cost"] ?? 0);
-    final time = clamp(widget.total["time"] ?? 0);
-    final risk = clamp(widget.total["risk"] ?? 0);
+    final total = aiService.getTotalImpact(); // 🔥 ambil global
+
+    final cost = clamp(total["cost"] ?? 0);
+    final time = clamp(total["time"] ?? 0);
+    final risk = clamp(total["risk"] ?? 0);
 
     final score = clamp(analysis?["publicScore"] ?? 0);
     final color = getScoreColor(score);

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:rispro/data/vendor_data.dart';
+import 'package:rispro/domain/service/ai_service.dart';
 import 'package:rispro/domain/service/simulation_ai_service.dart';
 
 class Scene4Screen extends StatefulWidget {
@@ -22,7 +23,7 @@ class Scene4Screen extends StatefulWidget {
 
 class _Scene4ScreenState extends State<Scene4Screen> {
   static const Color primary = Color(0xFF1E3A8A);
-
+Map<String, dynamic>? selectedImpact;
   final aiService = SimulationAIService();
 
   String? selected;
@@ -47,11 +48,13 @@ class _Scene4ScreenState extends State<Scene4Screen> {
       widget.lastChoice,
       widget.impact,
     );
-    print("Scene 4 : " + result.toString());
+print("=== UPDATE IMPACT ===");
+print(aiService.getTotalImpact());
     setState(() {
       data = result;
       fullText = result["scene"];
       isLoading = false;
+      
     });
 
     _typingEffect();
@@ -67,22 +70,31 @@ class _Scene4ScreenState extends State<Scene4Screen> {
     }
   }
 
-  void chooseAI(Map choice, int index) {
-    if (selected != null) return;
+void chooseAI(Map choice, int index) {
+  if (selected != null) return;
 
-    HapticFeedback.mediumImpact();
+  HapticFeedback.mediumImpact();
+    final impact = choice["impact"];
 
+  setState(() {
+    selected = index.toString();
+    feedback = choice["feedback"];
+    selectedImpact = choice["impact"]; // 🔥 INI WAJIB
+  });
+  aiService.addHistory(
+    scene: "Scene 4",
+    choice: choice["text"],
+    impact: impact,
+  );
+  // 🔥 update total impact
+  aiService.updateImpact(selectedImpact!);
+
+  Future.delayed(const Duration(milliseconds: 500), () {
     setState(() {
-      selected = index.toString();
-      feedback = choice["feedback"];
+      readyToNext = true;
     });
-
-    Future.delayed(const Duration(milliseconds: 500), () {
-      setState(() {
-        readyToNext = true;
-      });
-    });
-  }
+  });
+}
 
   void goNext() {
     if (!readyToNext) return;

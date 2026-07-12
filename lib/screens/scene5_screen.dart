@@ -27,6 +27,7 @@ class _Scene5ScreenState extends State<Scene5Screen> {
   String? feedback;
   String displayedText = "";
   String fullText = "";
+Map<String, dynamic>? selectedImpact;
 
   bool readyToNext = false;
   bool isLoading = true;
@@ -45,7 +46,10 @@ class _Scene5ScreenState extends State<Scene5Screen> {
       widget.vendor,
       widget.prevImpact,
     );
-    print("Analysis " +result.toString());
+print("=== UPDATE IMPACT ===");
+print(aiService.getTotalImpact());
+
+
     setState(() {
       data = result;
       fullText = result["scene"];
@@ -70,16 +74,25 @@ class _Scene5ScreenState extends State<Scene5Screen> {
     if (selected != null) return;
 
     HapticFeedback.mediumImpact();
+    final impact = choice["impact"];
 
     /// 🔥 efek tambahan kalau pilihan buruk
     if (index == 0) {
       HapticFeedback.heavyImpact();
     }
-
     setState(() {
       selected = index.toString();
       feedback = choice["feedback"];
+          selectedImpact = choice["impact"]; // 🔥 INI WAJIB
+
     });
+
+      aiService.addHistory(
+    scene: "Scene 4",
+    choice: choice["text"],
+    impact: impact,
+  );
+    aiService.updateImpact(selectedImpact!);
 
     Future.delayed(const Duration(milliseconds: 500), () {
       setState(() {
@@ -108,9 +121,9 @@ Navigator.pushReplacementNamed(
     '/scene7',
     arguments: {
       "total": {
-        "cost": widget.prevImpact["cost"] ?? 0,
-        "time": widget.prevImpact["time"] ?? 0,
-        "risk": widget.prevImpact["risk"] ?? 0,
+        "cost": aiService.totalImpact["cost"] ?? 0,
+        "time": aiService.totalImpact["time"] ?? 0,
+        "risk": aiService.totalImpact["risk"] ?? 0,
       }
     },
   );

@@ -16,72 +16,274 @@ class MenuScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: bg,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            children: [
-              const SizedBox(height: 20),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isTablet = constraints.maxWidth >= 700;
+            final horizontalPadding = isTablet ? 40.0 : 24.0;
 
-              /// 🔹 HEADER
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
-                  Text(
-                    "RISPRO",
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                      color: textPrimary,
-                    ),
+            return Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 980),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: horizontalPadding,
+                    vertical: isTablet ? 28 : 10,
                   ),
-                  Text(
-                    "Simulation",
+                  child: isTablet
+                      ? _TabletLayout(onStart: () {
+                          Navigator.pushNamed(context, '/game');
+                        })
+                      : _MobileLayout(onStart: () {
+                          Navigator.pushNamed(context, '/game');
+                        }),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _MobileLayout extends StatelessWidget {
+  final VoidCallback onStart;
+
+  const _MobileLayout({required this.onStart});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        const SizedBox(height: 20),
+
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: const [
+            Text(
+              "RISPRO",
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+                color: MenuScreen.textPrimary,
+              ),
+            ),
+            Text(
+              "Simulation",
+              style: TextStyle(
+                fontSize: 13,
+                color: MenuScreen.textSecondary,
+              ),
+            )
+          ],
+        )
+            .animate()
+            .fade(duration: 400.ms)
+            .slideY(begin: -0.2),
+
+        const SizedBox(height: 30),
+
+        const Text(
+          "Risk Decision Simulator",
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w600,
+            color: MenuScreen.textPrimary,
+          ),
+        )
+            .animate()
+            .fade(delay: 200.ms)
+            .slideY(begin: 0.2),
+
+        const SizedBox(height: 10),
+
+        const Text(
+          "Latih pengambilan keputusan manajemen risiko melalui simulasi proyek sektor publik.",
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 14,
+            color: MenuScreen.textSecondary,
+          ),
+        ).animate().fade(delay: 300.ms),
+
+        const SizedBox(height: 20),
+
+        SizedBox(
+          height: 160,
+          child: Lottie.asset(
+            'assets/AssetGame/Robots.json',
+            repeat: true,
+          ),
+        )
+            .animate()
+            .fade(delay: 400.ms)
+            .scale(begin: const Offset(0.9, 0.9)),
+
+        const SizedBox(height: 20),
+
+        const Text(
+          "Anda berperan sebagai Manajer Proyek sektor publik.\nSetiap keputusan diambil dalam kondisi certainty, risk, dan uncertainty.",
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 14,
+            color: MenuScreen.textPrimary,
+            height: 1.5,
+          ),
+        ).animate().fade(delay: 500.ms),
+
+        const Spacer(),
+
+        _StartButton(onTap: onStart)
+            .animate()
+            .fade(delay: 600.ms)
+            .scale(begin: const Offset(0.95, 0.95))
+            .then()
+            .scale(
+              begin: const Offset(1, 1),
+              end: const Offset(1.02, 1.02),
+              duration: 1200.ms,
+            )
+            .then()
+            .scale(
+              begin: const Offset(1.02, 1.02),
+              end: const Offset(1, 1),
+              duration: 1200.ms,
+            ),
+
+        const SizedBox(height: 16),
+
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: const [
+            _BottomItem(icon: Icons.menu_book, label: "Materi", route: '/materi'),
+            _BottomItem(icon: Icons.quiz, label: "Kuis", route: '/quiz'),
+            _BottomItem(icon: Icons.info, label: "Tentang", route: '/about'),
+          ],
+        )
+            .animate()
+            .fade(delay: 700.ms)
+            .slideY(begin: 0.3),
+
+        const SizedBox(height: 20),
+      ],
+    );
+  }
+}
+
+class _TabletLayout extends StatelessWidget {
+  final VoidCallback onStart;
+
+  const _TabletLayout({required this.onStart});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: const [
+            Text(
+              "RISPRO",
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 18,
+                color: MenuScreen.textPrimary,
+              ),
+            ),
+            Text(
+              "Simulation",
+              style: TextStyle(
+                fontSize: 14,
+                color: MenuScreen.textSecondary,
+              ),
+            )
+          ],
+        )
+            .animate()
+            .fade(duration: 400.ms)
+            .slideY(begin: -0.2),
+
+        const SizedBox(height: 28),
+
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              flex: 5,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Risk Decision Simulator",
                     style: TextStyle(
-                      fontSize: 13,
-                      color: textSecondary,
+                      fontSize: 30,
+                      fontWeight: FontWeight.w700,
+                      color: MenuScreen.textPrimary,
                     ),
                   )
+                      .animate()
+                      .fade(delay: 200.ms)
+                      .slideY(begin: 0.2),
+
+                  const SizedBox(height: 12),
+
+                  const Text(
+                    "Latih pengambilan keputusan manajemen risiko melalui simulasi proyek sektor publik.",
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: MenuScreen.textSecondary,
+                      height: 1.5,
+                    ),
+                  ).animate().fade(delay: 300.ms),
+
+                  const SizedBox(height: 20),
+
+                  const Text(
+                    "Anda berperan sebagai Manajer Proyek sektor publik.\nSetiap keputusan diambil dalam kondisi certainty, risk, dan uncertainty.",
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: MenuScreen.textPrimary,
+                      height: 1.5,
+                    ),
+                  ).animate().fade(delay: 400.ms),
+
+                  const SizedBox(height: 24),
+
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: SizedBox(
+                      width: 280,
+                      child: _StartButton(onTap: onStart),
+                    ),
+                  )
+                      .animate()
+                      .fade(delay: 500.ms)
+                      .scale(begin: const Offset(0.96, 0.96)),
+
+                  const SizedBox(height: 20),
+
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: const [
+                      _BottomItem(icon: Icons.menu_book, label: "Materi", route: '/materi'),
+                      _BottomItem(icon: Icons.quiz, label: "Kuis", route: '/quiz'),
+                      _BottomItem(icon: Icons.info, label: "Tentang", route: '/about'),
+                    ],
+                  )
+                      .animate()
+                      .fade(delay: 600.ms)
+                      .slideY(begin: 0.2),
                 ],
-              )
-                  .animate()
-                  .fade(duration: 400.ms)
-                  .slideY(begin: -0.2),
-
-              const SizedBox(height: 30),
-
-              /// 🧠 TITLE
-              const Text(
-                "Risk Decision Simulator",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w600,
-                  color: textPrimary,
-                ),
-              )
-                  .animate()
-                  .fade(delay: 200.ms)
-                  .slideY(begin: 0.2),
-
-              const SizedBox(height: 10),
-
-              /// 📘 SUBTITLE (SUDAH SESUAI PDF)
-              const Text(
-                "Latih pengambilan keputusan manajemen risiko melalui simulasi proyek sektor publik.",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: textSecondary,
-                ),
-              )
-                  .animate()
-                  .fade(delay: 300.ms),
-
-              const SizedBox(height: 20),
-
-              /// 🤖 LOTTIE CHARACTER
-              SizedBox(
-                height: 160,
+              ),
+            ),
+            const SizedBox(width: 24),
+            Expanded(
+              flex: 4,
+              child: SizedBox(
+                height: 300,
                 child: Lottie.asset(
                   'assets/AssetGame/Robots.json',
                   repeat: true,
@@ -90,81 +292,38 @@ class MenuScreen extends StatelessWidget {
                   .animate()
                   .fade(delay: 400.ms)
                   .scale(begin: const Offset(0.9, 0.9)),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
 
-              const SizedBox(height: 20),
+class _StartButton extends StatelessWidget {
+  final VoidCallback onTap;
 
-              /// 📄 CONTEXT (SUDAH SESUAI KONSEP)
-              const Text(
-                "Anda berperan sebagai Manajer Proyek sektor publik.\nSetiap keputusan diambil dalam kondisi certainty, risk, dan uncertainty.",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: textPrimary,
-                  height: 1.5,
-                ),
-              )
-                  .animate()
-                  .fade(delay: 500.ms),
+  const _StartButton({required this.onTap});
 
-              const Spacer(),
-
-              /// 🎯 CTA
-              InkWell(
-                borderRadius: BorderRadius.circular(12),
-                onTap: () {
-                  Navigator.pushNamed(context, '/game');
-                },
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  decoration: BoxDecoration(
-                    color: primary,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Center(
-                    child: Text(
-                      "Mulai Simulasi",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
-              )
-                  .animate()
-                  .fade(delay: 600.ms)
-                  .scale(begin: const Offset(0.95, 0.95))
-                  .then()
-                  .scale(
-                    begin: const Offset(1, 1),
-                    end: const Offset(1.02, 1.02),
-                    duration: 1200.ms,
-                  )
-                  .then()
-                  .scale(
-                    begin: const Offset(1.02, 1.02),
-                    end: const Offset(1, 1),
-                    duration: 1200.ms,
-                  ),
-
-              const SizedBox(height: 16),
-
-              /// 🔻 MENU BAWAH
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: const [
-          _BottomItem(icon: Icons.menu_book, label: "Materi", route: '/materi'),
-_BottomItem(icon: Icons.quiz, label: "Kuis", route: '/quiz'),
-_BottomItem(icon: Icons.info, label: "Tentang", route: '/about'),
-                ],
-              )
-                  .animate()
-                  .fade(delay: 700.ms)
-                  .slideY(begin: 0.3),
-
-              const SizedBox(height: 20),
-            ],
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: MenuScreen.primary,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Center(
+          child: Text(
+            "Mulai Simulasi",
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ),

@@ -25,9 +25,11 @@ class _Scene7ScreenState extends State<Scene7Screen> {
 
   /// 🔥 LOAD AI
   void loadAI() async {
+
+    print("=== UPDATE IMPACT ===");
+print(aiService.getTotalImpact());
     try {
       final res = await aiService.generateFinalAnalysisScane7(widget.total);
-
       setState(() {
         result = normalizeResult(
           Map<String, dynamic>.from(res),
@@ -214,7 +216,11 @@ class _Scene7ScreenState extends State<Scene7Screen> {
   '/scene6',
   (route) => false,
   arguments: {
-    "total": widget.total,
+    "total":{
+        "cost": aiService.totalImpact["cost"] ?? 0,
+        "time": aiService.totalImpact["time"] ?? 0,
+        "risk": aiService.totalImpact["risk"] ?? 0,
+    } ,
   },
 );
                   },

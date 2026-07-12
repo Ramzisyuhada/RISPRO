@@ -5,13 +5,92 @@ import 'package:rispro/domain/service/ai_service.dart';
 class SimulationAIService {
   final AIService mistral = AIService();
   final randomSeed = DateTime.now().millisecondsSinceEpoch;
+  final List<Map<String, dynamic>> history = [];
+
+   static final SimulationAIService _instance =
+      SimulationAIService._internal();
+      
+
+        SimulationAIService._internal();
+
+
+  factory SimulationAIService() {
+    return _instance;
+  }
+  Map<String, dynamic> totalImpact = {
+    "cost": 0,
+    "time": 0,
+    "risk": 0,
+  };
 
   /// =========================
-  /// VENDOR GENERATION (IMPROVED)
+  /// 🔥 AGENT RULE
+  /// =========================
+  String buildAgentInstruction(VendorData vendor) {
+    if (vendor.riskLevel == "high") {
+      return "Prioritaskan mitigasi risiko walaupun cost/time naik.";
+    } else if (vendor.rating > 4.5) {
+      return "Vendor sangat baik, boleh ambil keputusan cepat.";
+    } else {
+      return "Gunakan strategi seimbang antara cost, time, dan risk.";
+    }
+  }
+
+  /// =========================
+  /// 🔥 RAG HELPER
+  /// =========================
+  Future<String> ragContext(String query) async {
+    final docs = await mistral.retrieve(query);
+    return docs.join("\n---\n");
+  }
+
+  /// =========================
+  /// 🔥 AGENT + RAG GENERATOR
+  /// =========================
+  Future<String> agentRAG({
+    required String query,
+    required VendorData vendor,
+  }) async {
+    final context = await ragContext(query);
+    final instruction = buildAgentInstruction(vendor);
+
+    final prompt = """
+Kamu adalah AI Agent simulasi manajemen risiko proyek publik.
+
+KONTEKS:
+$context
+
+DATA VENDOR:
+- Nama: ${vendor.name}
+- Rating: ${vendor.rating}
+- Risk: ${vendor.riskLevel}
+
+RULE:
+$instruction
+
+TUGAS:
+$query
+
+WAJIB:
+- Gunakan konteks jika relevan
+- Gunakan logika vendor
+- Output JSON jika diminta
+""";
+
+    return await mistral.chat(prompt);
+  }
+
+  /// =========================
+  /// 🔥 VENDOR GENERATION (RAG IMPROVED)
   /// =========================
   Future<VendorData> generateVendor() async {
+    final context = await ragContext("vendor proyek publik indonesia");
+
     final prompt = """
 SEED: $randomSeed
+
+KONTEKS:
+$context
 
 Generate 1 vendor FIKTIF untuk proyek layanan publik digital di Indonesia.
 
@@ -52,7 +131,7 @@ FORMAT:
 """;
 
     try {
-      final result = await mistral.generateScene(prompt);
+      final result = await mistral.chat(prompt);
 
       final cleaned = result
           .replaceAll("```json", "")
@@ -76,69 +155,129 @@ FORMAT:
   }
 
   /// =========================
-  /// SCENE 3 - CERTAINTY
+  /// 🔥 SCENE 3 (RAG + AGENT)
   /// =========================
   Future<Map<String, dynamic>> generateScene3Decision(
       VendorData vendor) async {
- final prompt = """
-Kamu adalah AI decision engine simulasi proyek publik.
+
+            final context = await ragContext("manajemen risiko certainty proyek publik");
+
+   final result = await agentRAG(
+  vendor: vendor,
+  query: """
+
+KONSEP DASAR (WAJIB DIGUNAKAN):
+
+Certainty:
+Kondisi dengan informasi lengkap dan pasti (deterministik). Keputusan harus optimal dan efisien.
+
+Risk (ISO 31000):
+Risiko adalah efek dari ketidakpastian terhadap tujuan.
+Dinilai dari:
+- probabilitas (kemungkinan)
+- dampak (cost, time, dll)
+
+Uncertainty:
+Tidak digunakan di scene ini karena semua data pasti.
+
+KONTEKS:
+$context
 
 ⚠️ WAJIB:
 - Output hanya JSON VALID
 - Tidak boleh ada teks di luar JSON
 - Tidak boleh markdown
 - HARUS dimulai { dan diakhiri }
-- ANGKA tidak boleh pakai tanda + (contoh: 5 bukan +5)
+- ANGKA tidak boleh pakai tanda +
 
-KONDISI:
-Semua data vendor VALID dan terpercaya.
-
-DATA:
+=====================================
+DATA VENDOR (PASTI / CERTAINTY)
+=====================================
 - Rating: ${vendor.rating}
 - SuccessRate: ${vendor.successRate}
 - RiskLevel: ${vendor.riskLevel}
 
-TUGAS:
-Buat:
-- Narasi (1-2 kalimat)
-- 3 pilihan:
-  1. Langsung kontrak
-  2. Audit ulang
-  3. Cari vendor baru
+INTERPRETASI:
+- Rating tinggi + success tinggi → vendor sangat reliable
+- RiskLevel rendah → risiko kecil
+- Karena certainty → keputusan terbaik harus jelas (tidak spekulatif)
 
-BATAS NILAI:
-- cost: 0 sampai 30 (TIDAK BOLEH negatif)
+Setiap angka HARUS merepresentasikan konsekuensi logis keputusan.
+
+Gunakan prinsip:
+- Efisiensi → risk naik
+- Keamanan → cost/time naik
+- Perubahan besar → semua naik
+
+=====================================
+TUGAS
+=====================================
+
+1. Buat narasi singkat (maks 2 kalimat) berbasis DATA (bukan asumsi).
+
+2. Buat 3 pilihan keputusan:
+
+1. Langsung kontrak  
+→ Efisien (time cepat), risk sedikit naik karena tanpa validasi tambahan  
+
+2. Audit ulang  
+→ Lebih aman (risk turun), tapi cost dan time naik  
+
+3. Cari vendor baru  
+→ Risk bisa berubah tidak pasti, cost dan time meningkat signifikan  
+
+=====================================
+ATURAN NILAI (WAJIB LOGIS & KETAT)
+=====================================
+
+BATAS:
+- cost: 0 sampai 30
 - time: -10 sampai 30
 - risk: -10 sampai 20
 
-ATURAN PENTING:
-- Setiap pilihan HARUS memiliki trade-off
-- Tidak boleh semua nilai positif atau semua negatif
-- Jika time berkurang → risk harus naik
-- Jika risk turun → cost atau time harus naik
+RULE WAJIB:
+- Tidak boleh semua nilai positif
+- Tidak boleh semua nilai negatif
+- HARUS ADA trade-off nyata
 
-LOGIKA PILIHAN:
-1. Langsung kontrak:
-   - cost rendah
-   - time lebih cepat (negatif)
-   - risk meningkat
+LOGIKA CERTAINTY:
+- Keputusan optimal = cost rendah + time cepat + risk terkendali
+- Jika terlalu aman → cost/time naik
+- Jika terlalu cepat → risk naik
 
-2. Audit ulang:
-   - cost meningkat
-   - time meningkat
-   - risk menurun signifikan
+RELASI WAJIB:
+- Jika time turun (negatif) → risk HARUS naik (positif)
+- Jika risk turun (negatif) → cost ATAU time HARUS naik
+- Jika cost rendah → risk atau time harus naik
 
-3. Cari vendor baru:
-   - cost paling tinggi
-   - time paling lama
-   - risk paling rendah atau mendekati nol
+=====================================
+OUTPUT JSON
+=====================================
 
-FORMAT:
 {
-  "scene": "string",
+  "scene": "Vendor Selection - Certainty",
+  "narration": "string",
   "choices": [
     {
-      "text": "string",
+      "text": "Langsung kontrak",
+      "impact": {
+        "cost": number,
+        "time": number,
+        "risk": number
+      },
+      "feedback": "string"
+    },
+    {
+      "text": "Audit ulang",
+      "impact": {
+        "cost": number,
+        "time": number,
+        "risk": number
+      },
+      "feedback": "string"
+    },
+    {
+      "text": "Cari vendor baru",
       "impact": {
         "cost": number,
         "time": number,
@@ -148,8 +287,9 @@ FORMAT:
     }
   ]
 }
-""";
-    final result = await mistral.generateScene(prompt);
+
+""",
+);
 
     final cleaned = result
         .replaceAll("```json", "")
@@ -160,30 +300,53 @@ FORMAT:
   }
 
   /// =========================
-  /// SCENE 4 - RISK (STATEFUL)
+  /// 🔥 SCENE 4 (STATEFUL + RAG)
   /// =========================
   Future<Map<String, dynamic>> generateScene4Risk(
     VendorData vendor,
     String lastChoice,
     Map impact,
   ) async {
-   final prompt = """
-Kamu adalah AI simulasi risiko proyek publik.
+        final context = await ragContext("risk proyek keterlambatan material");
+
+    final result = await agentRAG(
+      vendor: vendor,
+      query: """
+KONSEP:
+Risk = probabilitas bisa dihitung.
+
+KONTEKS:
+$context
+
+
+KASUS:
+Keterlambatan material.
+
+
+Setiap angka HARUS merepresentasikan konsekuensi logis keputusan.
+
+Gunakan prinsip:
+- Efisiensi → risk naik
+- Keamanan → cost/time naik
+- Perubahan besar → semua naik
 
 ⚠️ WAJIB:
 - Output hanya JSON VALID
 - Tidak boleh ada teks selain JSON
 - Tidak boleh markdown
 - Harus dimulai { dan diakhiri }
+- Ada trade-off jelas
+- Risiko meningkat jika efisiensi tinggi
+
 
 KONDISI:
 Terjadi keterlambatan material.
 
 DATA:
 - Choice: $lastChoice
-- Cost: ${impact["cost"]}
-- Time: ${impact["time"]}
-- Risk: ${impact["risk"]}
+- Cost: ${totalImpact["cost"]}
+- Time: ${totalImpact["time"]}
+- Risk: ${totalImpact["risk"]}
 
 LOGIKA:
 - Risk tinggi → kondisi makin parah
@@ -211,7 +374,7 @@ LOGIKA PILIHAN:
 - Optimasi SDM → cost rendah, time sedikit turun, risk naik
 - Biarkan saja → cost rendah, time naik besar, risk naik besar
 
-FORMAT:
+Output JSON
 {
   "scene": "string",
   "choices": [
@@ -225,10 +388,9 @@ FORMAT:
       "feedback": "string"
     }
   ]
-}
-""";
-
-    final result = await mistral.generateScene(prompt);
+}.
+""",
+    );
 
     final cleaned = result
         .replaceAll("```json", "")
@@ -239,14 +401,34 @@ FORMAT:
   }
 
   /// =========================
-  /// SCENE 5 - UNCERTAINTY (STATEFUL)
+  /// 🔥 SCENE 5 (UNCERTAINTY + RAG)
   /// =========================
   Future<Map<String, dynamic>> generateScene5Uncertainty(
     VendorData vendor,
     Map prevImpact,
   ) async {
-    final prompt = """
-Kamu adalah AI simulasi proyek publik.
+        final context = await ragContext("uncertainty proyek cuaca ekstrem");
+
+    final result = await agentRAG(
+      vendor: vendor,
+      query: """
+KONSEP:
+Uncertainty = tidak ada data pasti.
+
+KONTEKS:
+$context
+
+
+Setiap angka HARUS merepresentasikan konsekuensi logis keputusan.
+
+Gunakan prinsip:
+- Efisiensi → risk naik
+- Keamanan → cost/time naik
+- Perubahan besar → semua naik
+
+
+KASUS:
+Cuaca ekstrem tidak dapat diprediksi.
 
 ⚠️ WAJIB:
 - Output hanya JSON VALID
@@ -259,16 +441,12 @@ KONDISI:
 Terjadi ketidakpastian tinggi akibat cuaca ekstrem yang tidak dapat diprediksi.
 Tidak ada data pasti, keputusan harus diambil dalam kondisi tidak jelas.
 
-DATA SEBELUMNYA:
+DATA :
 - Vendor: ${vendor.name}
-- Cost: ${prevImpact["cost"]}
-- Time: ${prevImpact["time"]}
-- Risk: ${prevImpact["risk"]}
+- Cost: ${totalImpact["cost"]}
+- Time: ${totalImpact["time"]}
+- Risk: ${totalImpact["risk"]}
 
-LOGIKA KONDISI:
-- Risk tinggi → dampak semakin tidak terkendali
-- Time tinggi → keterlambatan makin kritis
-- Cost tinggi → tekanan anggaran meningkat
 
 PILIHAN:
 1. Tunda proyek
@@ -287,26 +465,8 @@ ATURAN PENTING:
 - Setiap pilihan HARUS memiliki trade-off
 - Tidak boleh semua pilihan terlihat sama
 
-LOGIKA PILIHAN:
 
-1. Tunda proyek:
-   - cost naik sedang
-   - time naik paling besar
-   - risk sedikit menurun
-
-2. Lanjut dengan mitigasi:
-   - cost naik paling tinggi
-   - time naik sedang
-   - risk menurun cukup besar
-
-3. Ubah desain kerja:
-   - cost naik sedang
-   - time naik sedikit
-   - risk tetap tinggi (karena ketidakpastian belum hilang)
-
-SKALA:
-- Scene ini paling berat dibanding sebelumnya
-- Gunakan nilai lebih besar dari Scene 4
+Buat 3 pilihan dengan dampak buruk (semua positif).
 
 FORMAT JSON:
 {
@@ -323,9 +483,8 @@ FORMAT JSON:
     }
   ]
 }
-""";
-
-    final result = await mistral.generateScene(prompt);
+""",
+    );
 
     final cleaned = result
         .replaceAll("```json", "")
@@ -336,119 +495,191 @@ FORMAT JSON:
   }
 
   /// =========================
-  /// FINAL ANALYSIS (UPGRADED)
+  /// 🔥 FINAL ANALYSIS (RAG)
   /// =========================
   Future<Map<String, dynamic>> generateFinalAnalysis(Map total) async {
-  final prompt = """
-Kamu adalah evaluator simulasi manajemen risiko proyek publik.
+        final context = await mistral.retrieve(
+        "evaluasi keputusan manajemen risiko proyek publik");
+        final historyText = history.map((h) {
+      return """
+Scene: ${h["scene"]}
+Choice: ${h["choice"]}
+Cost: ${h["impact"]["cost"]}
+Time: ${h["impact"]["time"]}
+Risk: ${h["impact"]["risk"]}
+""";
+    }).join("\n---\n");
 
-⚠️ WAJIB:
-- Output HARUS JSON VALID
-- Tidak boleh teks tambahan
-- Tidak boleh markdown
-- HARUS dimulai { dan diakhiri }
+      final result = await mistral.generateWithRAG("""
+Kamu adalah evaluator simulasi manajemen risiko berbasis ISO 31000.
 
-DATA:
+KONTEKS:
+${context.join("\n")}
+
+HISTORY KEPUTUSAN:
+$historyText
+
+DATA TOTAL:
 - Cost: ${total["cost"]}
 - Time: ${total["time"]}
 - Risk: ${total["risk"]}
 
-TUGAS:
-Evaluasi hasil keputusan user + buat refleksi pembelajaran.
+========================
+METODE PENILAIAN WAJIB
+========================
 
-LOGIKA:
-- Risk tinggi → performa buruk
-- Cost & time efisien → performa baik
+1. Cost Overrun:
+- < 20 = rendah
+- 20–50 = sedang
+- > 50 = tinggi
 
-KLASIFIKASI:
+2. Risk Exposure:
+- Risk = total risk
+- < 30 = low
+- 30–60 = medium
+- > 60 = high
+
+3. Public Accountability:
+- Score tinggi jika:
+  - Risk rendah
+  - Tidak banyak keputusan ekstrem
+- Skala 0–100
+
+========================
+KLASIFIKASI USER
+========================
 - Risk > 60 → Risk Seeker
-- Risk 30-60 → Risk Neutral
+- Risk 30–60 → Risk Neutral
 - Risk < 30 → Risk Averse
 
-WAJIB HASILKAN:
+========================
+TUGAS
+========================
+Hitung dan hasilkan:
 
-1. profile → tipe keputusan user
-2. riskLevel → low/medium/high
-3. efficiency → low/medium/high
-4. publicScore → 0-100
+1. profile
+2. riskLevel
+3. costLevel
+4. publicScore (0–100)
 
-5. summary → dampak keputusan terhadap proyek
-6. mitigation → efektivitas mitigasi
-7. recommendation → evaluasi strategi
-8. learningInsight → insight pembelajaran simulasi
+ANALISIS:
+- Pola keputusan user
+- Efektivitas mitigasi
+- Dampak terhadap proyek
 
-FORMAT JSON:
+========================
+FORMAT JSON (WAJIB)
+========================
 {
   "profile": "Risk Averse / Risk Neutral / Risk Seeker",
   "riskLevel": "low/medium/high",
-  "efficiency": "low/medium/high",
+  "costLevel": "low/medium/high",
   "publicScore": number,
   "summary": "string",
   "mitigation": "string",
   "recommendation": "string",
   "learningInsight": "string"
 }
+""");
+
+    final cleaned = result
+        .replaceAll("```json", "")
+        .replaceAll("```", "")
+        .trim();
+
+    return jsonDecode(cleaned);
+  }
+
+  /// =========================
+  /// 🔥 FINAL ADVANCED ANALYSIS
+  /// =========================
+  Future<Map<String, dynamic>> generateFinalAnalysisScane7(
+      Map total) async {
+
+          final context = await mistral.retrieve("manajemen risiko proyek publik evaluasi");
+    final historyText = history.map((h) {
+      return """
+${h["scene"]} → ${h["choice"]}
 """;
+    }).join("\n");
 
-  final result = await mistral.generateScene(prompt);
 
-  final cleaned = result
-      .replaceAll("```json", "")
-      .replaceAll("```", "")
-      .trim();
+    final result = await mistral.generateWithRAG("""
+Analisis profil risiko user berdasarkan simulasi manajemen risiko proyek.
 
-  return jsonDecode(cleaned);
-}
-
-  Future<Map<String, dynamic>> generateFinalAnalysisScane7(Map total) async {
-  final prompt = """
-Kamu adalah AI evaluator dalam simulasi manajemen risiko proyek publik.
-
-⚠️ WAJIB:
-- Output HARUS JSON VALID
-- Tidak boleh ada teks tambahan
-- Tidak boleh markdown
-- HARUS dimulai { dan diakhiri }
-- Semua key pakai tanda kutip ganda
+HISTORY:
+$historyText
 
 DATA:
-- Total Cost: ${total["cost"]}
-- Total Time: ${total["time"]}
 - Total Risk: ${total["risk"]}
 
-TUGAS:
-Analisis profil risiko user berdasarkan keputusan yang telah diambil.
+========================
+ATURAN PENILAIAN
+========================
 
-KATEGORI (WAJIB PILIH SATU):
-- Risk Averse
-- Risk Neutral
-- Risk Seeker
+KLASIFIKASI RISK:
+- Risk < 30 → Low
+- Risk 30–60 → Medium
+- Risk > 60 → High
 
-LOGIKA PENILAIAN:
-- Risk tinggi → cenderung Risk Seeker
-- Risk rendah → cenderung Risk Averse
-- Seimbang → Risk Neutral
+PROFIL USER:
+- High → Risk Seeker
+- Medium → Risk Neutral
+- Low → Risk Averse
 
-PERSENTASE (WAJIB TOTAL 100):
-- avoidance (penghindaran risiko)
-- balance (keputusan seimbang)
-- aggressive (keputusan agresif)
+========================
+DISTRIBUSI SKOR (%)
+========================
 
-ATURAN:
-- Semua nilai integer
-- Total HARUS = 100
-- Harus realistis berdasarkan total risk
+Gunakan total risk untuk menentukan distribusi:
 
-INTERPRETASI:
-- avoidance dominan → Risk Averse
-- balance dominan → Risk Neutral
-- aggressive dominan → Risk Seeker
+Jika Risk tinggi (>60):
+- aggressive: 60–80
+- balance: 10–30
+- avoidance: 0–20
 
-TAMBAHAN:
-- publicScore: 0 - 100
-- Score tinggi jika risk rendah & efisiensi baik
+Jika Risk sedang (30–60):
+- balance: 40–60
+- aggressive: 20–40
+- avoidance: 20–40
 
-FORMAT JSON:
+Jika Risk rendah (<30):
+- avoidance: 60–80
+- balance: 10–30
+- aggressive: 0–20
+
+⚠️ WAJIB:
+- Total = 100
+- Semua integer
+- Tidak boleh negatif
+
+========================
+PUBLIC SCORE
+========================
+
+- Risk rendah → publicScore tinggi (70–100)
+- Risk sedang → publicScore sedang (40–70)
+- Risk tinggi → publicScore rendah (0–40)
+
+========================
+TUGAS
+========================
+
+Hasilkan:
+1. profile
+2. score (avoidance, balance, aggressive)
+3. riskLevel
+4. efficiency (berdasarkan keseimbangan keputusan)
+5. publicScore
+6. analysis
+7. impactSummary
+8. recommendation
+
+Gunakan HISTORY untuk membaca pola keputusan user.
+
+========================
+FORMAT JSON (WAJIB)
+========================
 {
   "profile": "Risk Averse / Risk Neutral / Risk Seeker",
   "score": {
@@ -463,15 +694,47 @@ FORMAT JSON:
   "impactSummary": "string",
   "recommendation": "string"
 }
-""";
 
-  final result = await mistral.generateScene(prompt);
+""");
 
-  final cleaned = result
-      .replaceAll("```json", "")
-      .replaceAll("```", "")
-      .trim();
+    final cleaned = result
+        .replaceAll("```json", "")
+        .replaceAll("```", "")
+        .trim();
 
-  return jsonDecode(cleaned);
+    return jsonDecode(cleaned);
+  }
+
+  void updateImpact(Map<String, dynamic> impact) {
+  totalImpact["cost"] += impact["cost"];
+  totalImpact["time"] += impact["time"];
+  totalImpact["risk"] += impact["risk"];
+
 }
+
+Map<String, dynamic> getTotalImpact() {
+    return totalImpact;
+  }
+
+  void resetImpact() {
+    totalImpact = {
+      "cost": 0,
+      "time": 0,
+      "risk": 0,
+    };
+  }
+
+void addHistory({
+  required String scene,
+  required String choice,
+  required Map<String, dynamic> impact,
+}) {
+  history.add({
+    "scene": scene,
+    "choice": choice,
+    "impact": impact,
+  });
+}
+
+
 }

@@ -14,99 +14,114 @@ class AboutScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: bg,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isTablet = constraints.maxWidth >= 700;
 
-              /// 🔙 BACK
-              IconButton(
-                icon: const Icon(Icons.arrow_back, color: textPrimary),
-                onPressed: () => Navigator.pop(context),
+            return SingleChildScrollView(
+              padding: EdgeInsets.symmetric(
+                horizontal: isTablet ? 40 : 20,
+                vertical: isTablet ? 20 : 10,
               ),
-
-              /// 🧠 HERO
-              _heroHeader(),
-
-              const SizedBox(height: 20),
-
-              /// 📱 ABOUT
-              _sectionCard(
-                icon: Icons.info_outline,
-                title: "Apa itu RISPRO?",
-                content:
-                    "RISPRO adalah aplikasi simulasi pengambilan keputusan manajemen risiko berbasis AI untuk proyek sektor publik.",
-              ).animate().fade(delay: 200.ms),
-
-              const SizedBox(height: 16),
-
-              /// 🎯 TUJUAN
-              _sectionCard(
-                icon: Icons.flag,
-                title: "Tujuan",
-                content:
-                    "Melatih kemampuan analisis risiko dan pengambilan keputusan melalui simulasi interaktif.",
-              ).animate().fade(delay: 300.ms),
-
-              const SizedBox(height: 16),
-
-              /// ⚙️ CARA KERJA
-              _sectionCard(
-                icon: Icons.settings,
-                title: "Cara Kerja",
-                content:
-                    "AI menghasilkan skenario proyek, pengguna memilih keputusan, lalu sistem memberikan feedback dan analisis risiko.",
-              ).animate().fade(delay: 400.ms),
-
-              const SizedBox(height: 16),
-
-              /// 🚀 FITUR
-              _sectionCard(
-                icon: Icons.star,
-                title: "Fitur Utama",
-                content:
-                    "Simulasi berbasis skenario, AI feedback, klasifikasi risiko, dan analisis profil pengguna.",
-              ).animate().fade(delay: 500.ms),
-
-              const SizedBox(height: 20),
-
-              /// 👨‍💻 TEAM (NO IMAGE)
-              _teamSection().animate().fade(delay: 600.ms),
-
-              const SizedBox(height: 30),
-
-              /// 🎯 BUTTON
-              InkWell(
-                borderRadius: BorderRadius.circular(14),
-                onTap: () {
-                  Navigator.pushNamed(context, '/game');
-                },
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  decoration: BoxDecoration(
-                    color: primary,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: const Center(
-                    child: Text(
-                      "Mulai Simulasi",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 920),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      /// 🔙 BACK
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back, color: textPrimary),
+                        onPressed: () => Navigator.pop(context),
                       ),
-                    ),
+
+                      /// 🧠 HERO
+                      _heroHeader(),
+
+                      const SizedBox(height: 20),
+
+                      /// 📱 ABOUT
+                      _sectionCard(
+                        icon: Icons.info_outline,
+                        title: "Apa itu RISPRO?",
+                        content:
+                            "RISPRO adalah Media pembelajaran berbasis simulasi AI dapat digunakan untuk mendukung pengambilan keputusan dalam manajemen risiko proyek sektor publik. Mahasiswa diharapkan dapat menganalisis risiko dan mengambil keputusan secara kontekstual dalam kondisi certainty, risk, dan uncertainty.",
+                      ).animate().fade(delay: 200.ms),
+
+                      const SizedBox(height: 16),
+
+                      /// 🎯 TUJUAN
+                      _sectionCard(
+                        icon: Icons.flag,
+                        title: "Tujuan",
+                        content:
+                            "Melatih kemampuan analisis risiko dan pengambilan keputusan melalui simulasi interaktif.",
+                      ).animate().fade(delay: 300.ms),
+
+                      const SizedBox(height: 16),
+
+                      /// ⚙️ CARA KERJA
+                      _sectionCard(
+                        icon: Icons.settings,
+                        title: "Cara Kerja",
+                        content:
+                            "AI menghasilkan skenario proyek, pengguna memilih keputusan, lalu sistem memberikan feedback dan analisis risiko.",
+                      ).animate().fade(delay: 400.ms),
+
+                      const SizedBox(height: 16),
+
+                      /// 🚀 FITUR
+                      _sectionCard(
+                        icon: Icons.star,
+                        title: "Fitur Utama",
+                        content:
+                            "Simulasi berbasis skenario, AI feedback, klasifikasi risiko, dan analisis profil pengguna.",
+                      ).animate().fade(delay: 500.ms),
+
+                      const SizedBox(height: 20),
+
+                      /// 👨‍💻 TEAM (NO IMAGE)
+                      _teamSection(isTablet: isTablet)
+                          .animate()
+                          .fade(delay: 600.ms),
+
+                      const SizedBox(height: 30),
+
+                      /// 🎯 BUTTON
+                      InkWell(
+                        borderRadius: BorderRadius.circular(14),
+                        onTap: () {
+                          Navigator.pushNamed(context, '/game');
+                        },
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          decoration: BoxDecoration(
+                            color: primary,
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              "Mulai Simulasi",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      )
+                          .animate()
+                          .fade(delay: 700.ms)
+                          .scale(begin: const Offset(0.95, 0.95)),
+
+                      const SizedBox(height: 20),
+                    ],
                   ),
                 ),
-              )
-                  .animate()
-                  .fade(delay: 700.ms)
-                  .scale(begin: const Offset(0.95, 0.95)),
-
-              const SizedBox(height: 20),
-            ],
-          ),
+              ),
+            );
+          },
         ),
       ),
     );
@@ -158,7 +173,7 @@ class AboutScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           )
@@ -198,11 +213,16 @@ class AboutScreen extends StatelessWidget {
   }
 
   /// 👨‍💻 TEAM SECTION (INITIAL AVATAR)
-  Widget _teamSection() {
+  Widget _teamSection({required bool isTablet}) {
     final team = [
-      {"name": "Ramzi Syuhada", "role": "Lead Developer"},
-      {"name": "Alya Putri", "role": "UI/UX Designer"},
-      {"name": "Budi Santoso", "role": "Backend Engineer"},
+      {"name": "Steviani Batti', S.Kom., M.M", "role": "Peneliti"},
+      {"name": "Gunawan Wiradharma, S.Pd., S.I.Kom., M.Si., M.Hum', S.Kom., M.M", "role": "Peneliti"},
+      {"name": "Mario Aditya Prasetyo, S.Pd., S.I.Kom., M.I.Kom.", "role": "Peneliti"},
+      {"name": "Zaenab Diah Febriani", "role": "Developer"},
+      {"name": "Eriel Dantes", "role": "Developer"},
+      {"name": "Galih Ashari R.", "role": "Developer"},
+      {"name": "Ramzi syuhada", "role": "Developer"},
+
     ];
 
     return Column(
@@ -219,7 +239,7 @@ class AboutScreen extends StatelessWidget {
         const SizedBox(height: 10),
 
         SizedBox(
-          height: 150,
+          height: isTablet ? 170 : 150,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             itemCount: team.length,
@@ -227,7 +247,7 @@ class AboutScreen extends StatelessWidget {
               final member = team[index];
 
               return Container(
-                width: 120,
+                width: isTablet ? 150 : 120,
                 margin: const EdgeInsets.only(right: 12),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -235,7 +255,7 @@ class AboutScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
+                      color: Colors.black.withValues(alpha: 0.04),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     )
@@ -246,8 +266,8 @@ class AboutScreen extends StatelessWidget {
 
                     /// 🔹 AVATAR INITIAL
                     CircleAvatar(
-                      radius: 28,
-                      backgroundColor: primary.withOpacity(0.1),
+                      radius: isTablet ? 30 : 28,
+                      backgroundColor: primary.withValues(alpha: 0.1),
                       child: Text(
                         member["name"]![0],
                         style: const TextStyle(

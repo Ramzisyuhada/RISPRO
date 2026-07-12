@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:rispro/domain/service/simulation_ai_service.dart';
@@ -52,7 +54,6 @@ class _SimulationIntroScreenState extends State<SimulationIntroScreen> {
   /// 🔥 LOAD VENDOR AI
   void loadVendor() async {
     final data = await aiService.generateVendor();
-    print(data.toString());
     setState(() {
       vendor = data;
     });
@@ -96,69 +97,80 @@ if (vendor != null) {
       context: context,
       backgroundColor: Colors.transparent,
       builder: (_) {
-        return Container(
-          padding: const EdgeInsets.all(20),
-          height: MediaQuery.of(context).size.height * 0.6,
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius:
-                BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          child: DefaultTextStyle(
-            style: const TextStyle(color: Colors.black),
-            child: Column(
-              children: [
-                const Text(
-                  "Vendor Profile",
-                  style: TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.bold),
-                ),
+        final screenHeight = MediaQuery.of(context).size.height;
 
-                const SizedBox(height: 20),
-
-                Image.asset(vendor!.image, height: 120),
-
-                const SizedBox(height: 16),
-
-                Text(
-                  vendor!.name,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-
-                const SizedBox(height: 12),
-
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+        return Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 560),
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              height: math.min(screenHeight * 0.6, 520),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius:
+                    BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: DefaultTextStyle(
+                style: const TextStyle(color: Colors.black),
+                child: Column(
                   children: [
-                    const Icon(Icons.star, color: Colors.amber),
-                    const SizedBox(width: 4),
-                    Text(vendor!.rating.toString()),
+                    const Text(
+                      "Vendor Profile",
+                      style: TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
 
-                    const SizedBox(width: 16),
+                    const SizedBox(height: 20),
 
-                    const Icon(Icons.inventory_2, color: Colors.blue),
-                    const SizedBox(width: 4),
-                    Text("${vendor!.projects} proyek"),
+                    Image.asset(vendor!.image, height: 120),
 
-                    const SizedBox(width: 16),
+                    const SizedBox(height: 16),
 
-                    const Icon(Icons.schedule, color: Colors.green),
-                    const SizedBox(width: 4),
-                    Text("${vendor!.successRate}%"),
+                    Text(
+                      vendor!.name,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.star, color: Colors.amber),
+                        const SizedBox(width: 4),
+                        Text(vendor!.rating.toString()),
+
+                        const SizedBox(width: 16),
+
+                        const Icon(Icons.inventory_2, color: Colors.blue),
+                        const SizedBox(width: 4),
+                        Text("${vendor!.projects} proyek"),
+
+                        const SizedBox(width: 16),
+
+                        const Icon(Icons.schedule, color: Colors.green),
+                        const SizedBox(width: 4),
+                        Text("${vendor!.successRate}%"),
+                      ],
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Text(
+                          vendor!.description,
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
-
-                const SizedBox(height: 16),
-
-                Text(
-                  vendor!.description,
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
+              ),
+            ).animate().slideY(begin: 1, duration: 400.ms),
           ),
-        ).animate().slideY(begin: 1, duration: 400.ms);
+        );
       },
     );
   }
@@ -166,7 +178,8 @@ if (vendor != null) {
   @override
   Widget build(BuildContext context) {
     final scene = scenes[step];
-
+    final isTablet = MediaQuery.of(context).size.width >= 700;
+  
     return Scaffold(
       body: GestureDetector(
         onTap: nextStep,
@@ -182,7 +195,7 @@ if (vendor != null) {
 
             Positioned.fill(
               child: Container(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
               ),
             ),
 
@@ -204,7 +217,7 @@ if (vendor != null) {
               alignment: Alignment.center,
               child: Image.asset(
                 scene["char"]!,
-                height: 260,
+                height: isTablet ? 320 : 260,
               ),
             ),
 

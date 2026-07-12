@@ -18,6 +18,7 @@ class _Scene3ScreenState extends State<Scene3Screen> {
 
   final aiService = SimulationAIService();
 Map? selectedChoice;
+Map<String, dynamic>? selectedImpact;
 
   Map<String, dynamic>? data;
   String? feedback;
@@ -30,6 +31,7 @@ Map? selectedChoice;
   @override
   void initState() {
     super.initState();
+    aiService.resetImpact();
     loadScene();
   }
 
@@ -39,7 +41,7 @@ Map? selectedChoice;
 
     setState(() {
       data = result;
-      fullText = result["scene"];
+      fullText = result["narration"];
       isLoading = false;
     });
     print(data);
@@ -62,18 +64,22 @@ Map? selectedChoice;
   /// 🔥 PILIHAN
   void choose(Map choice, int index) {
     HapticFeedback.mediumImpact();
+    final impact = choice["impact"];
 
     setState(() {
       selectedIndex = index;
           selectedChoice = choice; // 🔥 simpan pilihan
+    selectedImpact = choice["impact"]; // 🔥 INI WAJIB
 
     });
+  aiService.addHistory(
+    scene: "Scane 3 ",
+    choice: choice["text"],
+    impact: impact,
+  );
 
-    final impact = choice["impact"];
 
-    print("Cost: ${impact["cost"]}");
-    print("Time: ${impact["time"]}");
-    print("Risk: ${impact["risk"]}");
+    aiService.updateImpact(selectedImpact!);
 
     Future.delayed(const Duration(milliseconds: 600), () {
       setState(() {
