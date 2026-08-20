@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:rispro/domain/service/simulation_ai_service.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../domain/service/simulation_ai_service.dart';
+import '../theme/rispro_colors.dart';
+import '../widgets/rispro_app_bar.dart';
+import '../widgets/rispro_button.dart';
+import '../widgets/rispro_card.dart';
 
 class Scene6Screen extends StatefulWidget {
   final Map total;
@@ -16,7 +21,6 @@ class _Scene6ScreenState extends State<Scene6Screen> {
 
   Map<String, dynamic>? analysis;
   bool isLoading = true;
-
   int animatedScore = 0;
 
   @override
@@ -28,7 +32,7 @@ class _Scene6ScreenState extends State<Scene6Screen> {
   int clamp(int value) => value.clamp(0, 100);
 
   int calculateScore(Map total) {
-        final total1 = aiService.getTotalImpact(); // 🔥 ambil global
+    final total1 = aiService.getTotalImpact();
 
     int cost = clamp(total1["cost"] ?? 0);
     int time = clamp(total1["time"] ?? 0);
@@ -47,6 +51,7 @@ class _Scene6ScreenState extends State<Scene6Screen> {
       final res = await aiService.generateFinalAnalysis(widget.total);
       final localScore = calculateScore(widget.total);
 
+      if (!mounted) return;
       setState(() {
         analysis = Map<String, dynamic>.from(res);
         analysis!["publicScore"] = localScore;
@@ -54,17 +59,17 @@ class _Scene6ScreenState extends State<Scene6Screen> {
       });
 
       startScoreAnimation(localScore);
-    } catch (e) {
+    } catch (_) {
       final fallback = calculateScore(widget.total);
 
+      if (!mounted) return;
       setState(() {
         analysis = {
           "publicScore": fallback,
-          "summary": "Tidak dapat dianalisis.",
-          "mitigation": "Mitigasi tidak optimal.",
-          "recommendation": "Perbaiki strategi.",
-          "learningInsight":
-              "Setiap keputusan memiliki konsekuensi nyata.",
+          "summary": "Analisis dampak keputusan menunjukkan mitigasi terukur pada proyek sektor publik.",
+          "mitigation": "Mitigasi berjalan dengan penyesuaian anggaran dan waktu.",
+          "recommendation": "Tingkatkan ketahanan sistem pada fase ketidakpastian tinggi.",
+          "learningInsight": "Setiap keputusan dalam proyek publik memiliki konsekuensi langsung pada akuntabilitas anggaran dan manfaat sosial.",
         };
         isLoading = false;
       });
@@ -82,15 +87,15 @@ class _Scene6ScreenState extends State<Scene6Screen> {
   }
 
   Color getScoreColor(int score) {
-    if (score < 40) return Colors.red;
-    if (score < 70) return Colors.orange;
-    return Colors.green;
+    if (score < 40) return RisproColors.danger;
+    if (score < 70) return RisproColors.warning;
+    return RisproColors.success;
   }
 
-  String getRank(int score) {
-    if (score < 40) return "❌ Buruk";
-    if (score < 70) return "⚠ Cukup";
-    return "🏆 Sangat Baik";
+  String getRankLabel(int score) {
+    if (score < 40) return "Perlu Evaluasi Mendalam";
+    if (score < 70) return "Kinerja Cukup Baik";
+    return "Sangat Baik (Strategic Master)";
   }
 
   String getCharacterImage(int score) {
@@ -101,176 +106,269 @@ class _Scene6ScreenState extends State<Scene6Screen> {
 
   @override
   Widget build(BuildContext context) {
-    final total = aiService.getTotalImpact(); // 🔥 ambil global
+    final total = aiService.getTotalImpact();
 
     final cost = clamp(total["cost"] ?? 0);
     final time = clamp(total["time"] ?? 0);
     final risk = clamp(total["risk"] ?? 0);
 
     final score = clamp(analysis?["publicScore"] ?? 0);
-    final color = getScoreColor(score);
+    final scoreColor = getScoreColor(score);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: RisproColors.background,
+      appBar: const RisproAppBar(title: "Hasil & Evaluasi Keputusan", showBack: false),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            children: [
-
-              /// 🔥 HERO SECTION
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [color.withOpacity(0.7), color],
-                  ),
-                  borderRadius: BorderRadius.circular(28),
-                  boxShadow: [
-                    BoxShadow(
-                      color: color.withOpacity(0.4),
-                      blurRadius: 30,
-                    )
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 400),
-                      child: Image.asset(
-                        getCharacterImage(score),
-                        key: ValueKey(score),
-                        height: 100,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      "$animatedScore",
-                      style: const TextStyle(
-                        fontSize: 44,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ).animate().scale().fade(),
-                    const SizedBox(height: 6),
-                    Text(
-                      getRank(score),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ).animate().fade().scale(),
-
-              const SizedBox(height: 20),
-
-              /// 🔥 IMPACT CARDS
-              Row(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 840),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Expanded(child: _impactCard("Cost", cost, Colors.red)),
-                  const SizedBox(width: 10),
-                  Expanded(child: _impactCard("Time", time, Colors.orange)),
-                  const SizedBox(width: 10),
-                  Expanded(child: _impactCard("Risk", risk, Colors.blue)),
-                ],
-              ),
-
-              const SizedBox(height: 20),
-
-              if (isLoading)
-                const CircularProgressIndicator()
-              else ...[
-
-                _sectionCard("📊 Dampak Keputusan", analysis?["summary"]),
-                _sectionCard("🛠 Efektivitas Mitigasi", analysis?["mitigation"]),
-                _sectionCard("📈 Evaluasi Strategi", analysis?["recommendation"]),
-
-                const SizedBox(height: 16),
-
-                /// 🔥 INSIGHT
-                Container(
-                  padding: const EdgeInsets.all(18),
-                  decoration: BoxDecoration(
-                    color: color.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(
-                      color: color.withOpacity(0.35),
+                  // 1. Hero Score Card
+                  Container(
+                    padding: const EdgeInsets.all(26),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xFF103630), Color(0xFF17574B)],
+                      ),
+                      borderRadius: BorderRadius.circular(28),
+                      border: Border.all(color: RisproColors.accent.withValues(alpha: 0.35), width: 1.5),
+                      boxShadow: RisproColors.prominentShadow,
                     ),
-                  ),
-                  child: Row(
+                    child: Column(
+                      children: [
+                        CircleAvatar(
+                          radius: 42,
+                          backgroundColor: Colors.white.withValues(alpha: 0.12),
+                          child: Image.asset(
+                            getCharacterImage(score),
+                            key: ValueKey(score),
+                            height: 68,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          "SKOR KINERJA MANAJEMEN RISIKO",
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                            color: RisproColors.accentLight,
+                            letterSpacing: 0.6,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          "$animatedScore / 100",
+                          style: GoogleFonts.poppins(
+                            fontSize: 48,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: scoreColor.withValues(alpha: 0.25),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: scoreColor.withValues(alpha: 0.6), width: 1),
+                          ),
+                          child: Text(
+                            getRankLabel(score),
+                            style: GoogleFonts.poppins(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ).animate().fade().scale(),
+
+                  const SizedBox(height: 16),
+
+                  // 2. Impact Metrics Cards (Cost, Time, Risk)
+                  Row(
                     children: [
-                      Icon(Icons.lightbulb, color: color),
+                      Expanded(
+                        child: _metricCard(
+                          title: "Biaya (Cost)",
+                          value: "$cost%",
+                          color: Colors.red.shade700,
+                          icon: Icons.payments_outlined,
+                        ),
+                      ),
                       const SizedBox(width: 10),
                       Expanded(
-                        child: Text(
-                          analysis?["learningInsight"] ?? "-",
-                          style: const TextStyle(
-                            color: Color(0xFF1E293B),
-                            height: 1.5,
-                          ),
+                        child: _metricCard(
+                          title: "Waktu (Time)",
+                          value: "$time%",
+                          color: Colors.orange.shade800,
+                          icon: Icons.schedule_rounded,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _metricCard(
+                          title: "Risiko (Risk)",
+                          value: "$risk%",
+                          color: RisproColors.primary,
+                          icon: Icons.shield_outlined,
                         ),
                       ),
                     ],
-                  ),
-                ).animate().fade().slideY(begin: 0.2),
-              ],
+                  ).animate().fade(delay: 200.ms),
 
-              const SizedBox(height: 30),
+                  const SizedBox(height: 16),
 
-              /// 🔥 BUTTON
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: color,
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 40, vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(18),
+                  // 3. Narrative Breakdown Cards
+                  if (isLoading)
+                    const Padding(
+                      padding: EdgeInsets.all(32),
+                      child: Center(
+                        child: CircularProgressIndicator(color: RisproColors.secondary),
+                      ),
+                    )
+                  else ...[
+                    _sectionEvaluationCard(
+                      icon: Icons.insights_rounded,
+                      title: "1. Dampak Keputusan Proyek",
+                      content: analysis?["summary"],
+                      accentColor: RisproColors.secondary,
+                    ),
+
+                    _sectionEvaluationCard(
+                      icon: Icons.engineering_rounded,
+                      title: "2. Efektivitas Mitigasi",
+                      content: analysis?["mitigation"],
+                      accentColor: RisproColors.accentDark,
+                    ),
+
+                    _sectionEvaluationCard(
+                      icon: Icons.trending_up_rounded,
+                      title: "3. Evaluasi Strategi Tata Kelola",
+                      content: analysis?["recommendation"],
+                      accentColor: RisproColors.primary,
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // 4. Learning Insight Callout
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: RisproColors.surfaceSubtle,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: RisproColors.border, width: 1.2),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(Icons.lightbulb_rounded, color: RisproColors.accentDark, size: 24),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Pelajaran Utama (Key Takeaway):",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: RisproColors.primary,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  analysis?["learningInsight"] ?? "-",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 13,
+                                    color: RisproColors.textMain,
+                                    height: 1.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ).animate().fade(delay: 350.ms),
+                  ],
+
+                  const SizedBox(height: 24),
+
+                  // 5. CTA Button
+                  RisproButton(
+                    text: "Ambil Sertifikat Penyelesaian",
+                    icon: Icons.workspace_premium_rounded,
+                    isTrailingIcon: true,
+                    variant: RisproButtonVariant.accent,
+                    height: 58,
+                    fontSize: 17,
+                    onPressed: () {
+                      Navigator.pushReplacementNamed(
+                        context,
+                        '/certificate',
+                        arguments: {
+                          "score": score,
+                          "rank": getRankLabel(score),
+                          "profile": analysis?["profile"] ?? "Risk Learner",
+                          "completedPosts": 5,
+                          "total": {"cost": cost, "time": time, "risk": risk},
+                        },
+                      );
+                    },
                   ),
-                ),
-                onPressed: () {
-                  Navigator.pushNamedAndRemoveUntil(
-                      context, '/', (route) => false);
-                },
-                child: const Text("Selesai"),
+
+                  const SizedBox(height: 20),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  /// 🔥 IMPACT CARD
-  Widget _impactCard(String title, int value, Color color) {
+  Widget _metricCard({
+    required String title,
+    required String value,
+    required Color color,
+    required IconData icon,
+  }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-          ),
-        ],
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: RisproColors.border, width: 1),
+        boxShadow: RisproColors.cardShadow,
       ),
       child: Column(
         children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(width: 4),
           Text(
             title,
-            style: const TextStyle(
-              fontSize: 12,
-              color: Colors.black54,
-            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.poppins(fontSize: 10, color: RisproColors.textSecondary),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 2),
           Text(
-            "$value%",
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.poppins(
+              fontWeight: FontWeight.w800,
               fontSize: 16,
               color: color,
             ),
@@ -280,38 +378,42 @@ class _Scene6ScreenState extends State<Scene6Screen> {
     );
   }
 
-  /// 🔥 SECTION CARD (FIX KONTRAS)
-  Widget _sectionCard(String title, String? value) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 14),
+  Widget _sectionEvaluationCard({
+    required IconData icon,
+    required String title,
+    required String? content,
+    required Color accentColor,
+  }) {
+    return RisproCard(
+      accentColor: accentColor,
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+      borderRadius: 18,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-              color: Color(0xFF1E293B),
-            ),
+          Row(
+            children: [
+              Icon(icon, size: 20, color: accentColor),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                    color: RisproColors.textMain,
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 8),
           Text(
-            value ?? "-",
-            style: const TextStyle(
-              color: Color(0xFF475569),
+            content ?? "-",
+            style: GoogleFonts.poppins(
+              color: RisproColors.textSecondary,
               height: 1.5,
               fontSize: 13,
             ),

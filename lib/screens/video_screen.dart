@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:video_player/video_player.dart';
+import '../theme/rispro_colors.dart';
+import '../widgets/rispro_app_bar.dart';
+import '../widgets/rispro_button.dart';
 
 class VideoScreen extends StatefulWidget {
   const VideoScreen({super.key});
@@ -10,11 +14,6 @@ class VideoScreen extends StatefulWidget {
 }
 
 class _VideoScreenState extends State<VideoScreen> {
-  static const Color primary = Color(0xFF1E3A8A);
-  static const Color bg = Color(0xFFF8FAFC);
-  static const Color textPrimary = Color(0xFF0F172A);
-  static const Color textSecondary = Color(0xFF64748B);
-
   late VideoPlayerController _videoController;
 
   @override
@@ -35,201 +34,187 @@ class _VideoScreenState extends State<VideoScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: bg,
-      appBar: AppBar(
-        backgroundColor: bg,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: textPrimary),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          "Video Pembelajaran",
-          style: TextStyle(color: textPrimary, fontWeight: FontWeight.w600),
-        ),
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _sectionTitle("Video Penjelasan Materi"),
-            const SizedBox(height: 15),
-            _videoPlayer().animate().fade(),
-            const SizedBox(height: 20),
-            _infoCard(),
-            const SizedBox(height: 30),
-          ],
-        ),
-      ),
-    );
-  }
+      backgroundColor: RisproColors.background,
+      appBar: const RisproAppBar(title: "Video Pembelajaran"),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 860),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Video Frame Card
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: RisproColors.border, width: 1.2),
+                      boxShadow: RisproColors.cardShadow,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Player Area
+                        ClipRRect(
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
+                          child: _videoController.value.isInitialized
+                              ? AspectRatio(
+                                  aspectRatio: _videoController.value.aspectRatio,
+                                  child: VideoPlayer(_videoController),
+                                )
+                              : AspectRatio(
+                                  aspectRatio: 16 / 9,
+                                  child: Container(
+                                    color: RisproColors.primaryDark,
+                                    child: const Center(
+                                      child: CircularProgressIndicator(
+                                        color: RisproColors.accent,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                        ),
 
-  /// 🔹 TITLE
-  Widget _sectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-          color: textPrimary,
-        ),
-      ),
-    );
-  }
+                        // Controls
+                        Padding(
+                          padding: const EdgeInsets.all(18),
+                          child: Column(
+                            children: [
+                              // Progress Bar
+                              if (_videoController.value.isInitialized)
+                                VideoProgressIndicator(
+                                  _videoController,
+                                  allowScrubbing: true,
+                                  padding: const EdgeInsets.symmetric(vertical: 8),
+                                  colors: VideoProgressColors(
+                                    playedColor: RisproColors.secondary,
+                                    bufferedColor: RisproColors.border,
+                                    backgroundColor: RisproColors.surfaceSubtle,
+                                  ),
+                                ),
 
-  /// 🎥 VIDEO PLAYER
-  Widget _videoPlayer() {
-    if (!_videoController.value.isInitialized) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
-    }
+                              const SizedBox(height: 6),
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(12),
-              topRight: Radius.circular(12),
-            ),
-            child: AspectRatio(
-              aspectRatio: _videoController.value.aspectRatio,
-              child: VideoPlayer(_videoController),
-            ),
-          ),
-          const SizedBox(height: 15),
-          _videoControls(),
-          const SizedBox(height: 15),
-        ],
-      ),
-    );
-  }
+                              // Time Labels
+                              if (_videoController.value.isInitialized)
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      _formatDuration(_videoController.value.position),
+                                      style: GoogleFonts.poppins(
+                                        color: RisproColors.textSecondary,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    Text(
+                                      _formatDuration(_videoController.value.duration),
+                                      style: GoogleFonts.poppins(
+                                        color: RisproColors.textSecondary,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
 
-  /// 🎮 VIDEO CONTROLS
-  Widget _videoControls() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: Column(
-        children: [
-          /// Progress Bar
-          VideoProgressIndicator(
-            _videoController,
-            allowScrubbing: true,
-            colors: VideoProgressColors(
-              playedColor: primary,
-              bufferedColor: Colors.grey[300]!,
-            ),
-          ),
-          const SizedBox(height: 10),
+                              const SizedBox(height: 14),
 
-          /// Time Info
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                _formatDuration(_videoController.value.position),
-                style: const TextStyle(
-                  color: textSecondary,
-                  fontSize: 12,
-                ),
+                              // Play / Pause Action
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  RisproButton(
+                                    text: _videoController.value.isPlaying
+                                        ? "Jeda Video"
+                                        : "Putar Video",
+                                    icon: _videoController.value.isPlaying
+                                        ? Icons.pause_rounded
+                                        : Icons.play_arrow_rounded,
+                                    variant: _videoController.value.isPlaying
+                                        ? RisproButtonVariant.secondary
+                                        : RisproButtonVariant.primaryCta,
+                                    height: 48,
+                                    fontSize: 15,
+                                    onPressed: () {
+                                      setState(() {
+                                        _videoController.value.isPlaying
+                                            ? _videoController.pause()
+                                            : _videoController.play();
+                                      });
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ).animate().fade().scale(begin: const Offset(0.98, 0.98)),
+
+                  const SizedBox(height: 20),
+
+                  // Tips Callout
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: RisproColors.surfaceSubtle,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: RisproColors.border, width: 1.2),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.lightbulb_rounded,
+                              color: RisproColors.accentDark,
+                              size: 22,
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              "Panduan Belajar",
+                              style: GoogleFonts.poppins(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: RisproColors.textMain,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          "Simak penjelasan mengenai perbedaan respon risiko proyek sektor publik. Perhatikan bagaimana keputusan pada Certainty berbeda dari situasi Uncertainty.",
+                          style: GoogleFonts.poppins(
+                            fontSize: 13,
+                            color: RisproColors.textSecondary,
+                            height: 1.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+                ],
               ),
-              Text(
-                _formatDuration(_videoController.value.duration),
-                style: const TextStyle(
-                  color: textSecondary,
-                  fontSize: 12,
-                ),
-              ),
-            ],
+            ),
           ),
-          const SizedBox(height: 10),
-
-          /// Play/Pause Button
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ElevatedButton.icon(
-                onPressed: () {
-                  setState(() {
-                    _videoController.value.isPlaying
-                        ? _videoController.pause()
-                        : _videoController.play();
-                  });
-                },
-                icon: Icon(
-                  _videoController.value.isPlaying
-                      ? Icons.pause
-                      : Icons.play_arrow,
-                ),
-                label: Text(
-                  _videoController.value.isPlaying ? "Jeda" : "Mainkan",
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primary,
-                ),
-              ),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  /// 📋 INFO CARD
-  Widget _infoCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: primary.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: primary.withOpacity(0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            "💡 Tips Menonton",
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: primary,
-            ),
-          ),
-          const SizedBox(height: 10),
-          const Text(
-            "Tonton video ini dengan seksama. Materi yang dijelaskan akan membantu Anda memahami konsep manajemen risiko dengan lebih baik.",
-            style: TextStyle(
-              fontSize: 13,
-              color: textSecondary,
-              height: 1.5,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// 🕐 FORMAT DURATION
   String _formatDuration(Duration duration) {
     String twoDigits(int n) => n.toString().padLeft(2, '0');
     String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
     String twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
-    return "${twoDigits(duration.inHours)}:$twoDigitMinutes:$twoDigitSeconds";
+    return "$twoDigitMinutes:$twoDigitSeconds";
   }
 }

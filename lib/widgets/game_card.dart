@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../theme/rispro_colors.dart';
 
 class GameCard extends StatelessWidget {
   final String text;
@@ -13,17 +15,17 @@ class GameCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            blurRadius: 15,
-            color: Colors.black.withOpacity(0.2),
-          )
-        ],
+        border: Border.all(color: RisproColors.border, width: 1),
+        boxShadow: RisproColors.cardShadow,
       ),
       child: Center(
         child: Text(
           text,
-          style: const TextStyle(fontSize: 18),
+          style: GoogleFonts.poppins(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: RisproColors.textMain,
+          ),
           textAlign: TextAlign.center,
         ),
       ),

@@ -607,6 +607,9 @@ ${h["scene"]} → ${h["choice"]}
     final result = await mistral.generateWithRAG("""
 Analisis profil risiko user berdasarkan simulasi manajemen risiko proyek.
 
+KONTEKS:
+${context.join("\n")}
+
 HISTORY:
 $historyText
 

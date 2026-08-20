@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../theme/rispro_colors.dart';
+import '../widgets/rispro_app_bar.dart';
+import '../widgets/rispro_button.dart';
 
 class PptScreen extends StatefulWidget {
   const PptScreen({super.key});
@@ -9,167 +13,181 @@ class PptScreen extends StatefulWidget {
 }
 
 class _PptScreenState extends State<PptScreen> {
-  static const Color primary = Color(0xFF1E3A8A);
-  static const Color bg = Color(0xFFF8FAFC);
-  static const Color textPrimary = Color(0xFF0F172A);
-  static const Color textSecondary = Color(0xFF64748B);
-
-final List<String> slides = [
-  'assets/ppt/1.jpg',
-  'assets/ppt/2.jpg',
-  'assets/ppt/3.jpg',
-  'assets/ppt/4.jpg',
-  'assets/ppt/5.jpg',
-  'assets/ppt/6.jpg',
-  'assets/ppt/7.jpg',
-  'assets/ppt/8.jpg',
-  'assets/ppt/9.jpg',
-  'assets/ppt/10.jpg',
-  'assets/ppt/11.jpg',
-  'assets/ppt/12.jpg',
-  'assets/ppt/13.jpg',
-  'assets/ppt/14.jpg',
-  'assets/ppt/15.jpg',
-  'assets/ppt/16.jpg',
-  'assets/ppt/17.jpg',
-  'assets/ppt/18.jpg',
-  'assets/ppt/19.jpg',
-  'assets/ppt/20.jpg',
-  'assets/ppt/21.jpg',
-];
+  final List<String> slides = List.generate(
+    21,
+    (index) => 'assets/ppt/${index + 1}.jpg',
+  );
 
   int currentSlide = 0;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: bg,
-      appBar: AppBar(
-        backgroundColor: bg,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: textPrimary),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          "Materi PPT",
-          style: TextStyle(color: textPrimary, fontWeight: FontWeight.w600),
-        ),
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _sectionTitle("Slide Pembelajaran"),
-            const SizedBox(height: 15),
-            _pptViewer().animate().fade(),
-            const SizedBox(height: 30),
-          ],
-        ),
-      ),
-    );
-  }
+      backgroundColor: RisproColors.background,
+      appBar: const RisproAppBar(title: "Slide Presentasi"),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 860),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Slide Frame Card
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: RisproColors.border, width: 1.2),
+                      boxShadow: RisproColors.cardShadow,
+                    ),
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      children: [
+                        // Slide Image Display
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: AspectRatio(
+                            aspectRatio: 16 / 9,
+                            child: Image.asset(
+                              slides[currentSlide],
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) => Container(
+                                color: RisproColors.surfaceSubtle,
+                                child: Center(
+                                  child: Text(
+                                    "Slide ${currentSlide + 1}",
+                                    style: GoogleFonts.poppins(
+                                      color: RisproColors.textSecondary,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
 
-  /// 🔹 TITLE
-  Widget _sectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-          color: textPrimary,
-        ),
-      ),
-    );
-  }
+                        const SizedBox(height: 16),
 
-  /// 📊 PPT VIEWER (IMAGE BASED)
-  Widget _pptViewer() {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          /// IMAGE
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: Image.asset(
-              slides[currentSlide],
-              fit: BoxFit.cover,
-            ),
-          ),
+                        // Slide Navigation & Progress
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: RisproColors.surfaceSubtle,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: RisproColors.border, width: 1),
+                              ),
+                              child: Text(
+                                "Slide ${currentSlide + 1} / ${slides.length}",
+                                style: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: RisproColors.primary,
+                                ),
+                              ),
+                            ),
 
-          const SizedBox(height: 15),
+                            // Mini Progress Dots / Indicator
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(4),
+                                  child: LinearProgressIndicator(
+                                    value: (currentSlide + 1) / slides.length,
+                                    minHeight: 6,
+                                    backgroundColor: RisproColors.surfaceSubtle,
+                                    color: RisproColors.secondary,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
 
-          /// SLIDE INDICATOR
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-            decoration: BoxDecoration(
-              color: primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              "Slide ${currentSlide + 1} dari ${slides.length}",
-              style: const TextStyle(
-                color: primary,
-                fontWeight: FontWeight.w600,
+                        const SizedBox(height: 18),
+
+                        // Controls Buttons
+                        Row(
+                          children: [
+                            Expanded(
+                              child: RisproButton(
+                                text: "Sebelumnya",
+                                icon: Icons.arrow_back_rounded,
+                                variant: RisproButtonVariant.secondary,
+                                height: 50,
+                                fontSize: 15,
+                                onPressed: currentSlide > 0
+                                    ? () => setState(() => currentSlide--)
+                                    : null,
+                              ),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: RisproButton(
+                                text: currentSlide < slides.length - 1
+                                    ? "Berikutnya"
+                                    : "Selesai",
+                                icon: Icons.arrow_forward_rounded,
+                                isTrailingIcon: true,
+                                variant: RisproButtonVariant.primaryCta,
+                                height: 50,
+                                fontSize: 15,
+                                onPressed: currentSlide < slides.length - 1
+                                    ? () => setState(() => currentSlide++)
+                                    : () => Navigator.pop(context),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ).animate().fade().scale(begin: const Offset(0.98, 0.98)),
+
+                  const SizedBox(height: 20),
+
+                  // Tips / Context Callout
+                  Container(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: RisproColors.surfaceSubtle,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: RisproColors.border, width: 1),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(
+                          Icons.lightbulb_outline_rounded,
+                          color: RisproColors.secondary,
+                          size: 22,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            "Gunakan tombol navigasi di atas untuk berpindah slide. Materi ini menjadi dasar analisis risiko pada tahap simulasi dan kuis pemahaman.",
+                            style: GoogleFonts.poppins(
+                              fontSize: 13,
+                              color: RisproColors.textMain,
+                              height: 1.5,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+                ],
               ),
             ),
           ),
-
-          const SizedBox(height: 15),
-
-          /// SLIDER CONTROL
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              ElevatedButton.icon(
-                onPressed: currentSlide > 0
-                    ? () {
-                        setState(() {
-                          currentSlide--;
-                        });
-                      }
-                    : null,
-                icon: const Icon(Icons.arrow_back),
-                label: const Text("Sebelumnya"),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primary,
-                  disabledBackgroundColor: Colors.grey[300],
-                ),
-              ),
-              ElevatedButton.icon(
-                onPressed: currentSlide < slides.length - 1
-                    ? () {
-                        setState(() {
-                          currentSlide++;
-                        });
-                      }
-                    : null,
-                icon: const Text("Berikutnya"),
-                label: const Icon(Icons.arrow_forward),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primary,
-                  disabledBackgroundColor: Colors.grey[300],
-                ),
-              ),
-            ],
-          )
-        ],
+        ),
       ),
     );
   }

@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:rispro/data/vendor_data.dart';
-import 'package:rispro/domain/service/simulation_ai_service.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../data/vendor_data.dart';
+import '../domain/service/simulation_ai_service.dart';
+import '../theme/rispro_colors.dart';
+import '../widgets/rispro_app_bar.dart';
+import '../widgets/rispro_badge.dart';
+import '../widgets/rispro_decision_card.dart';
+import '../widgets/rispro_progress_journey.dart';
 
 class Scene5Screen extends StatefulWidget {
   final VendorData vendor;
@@ -19,15 +25,13 @@ class Scene5Screen extends StatefulWidget {
 }
 
 class _Scene5ScreenState extends State<Scene5Screen> {
-  static const Color primary = Color(0xFF1E3A8A);
-
   final aiService = SimulationAIService();
 
   String? selected;
   String? feedback;
   String displayedText = "";
   String fullText = "";
-Map<String, dynamic>? selectedImpact;
+  Map<String, dynamic>? selectedImpact;
 
   bool readyToNext = false;
   bool isLoading = true;
@@ -40,19 +44,16 @@ Map<String, dynamic>? selectedImpact;
     loadScene();
   }
 
-  /// 🔥 LOAD AI
   void loadScene() async {
     final result = await aiService.generateScene5Uncertainty(
       widget.vendor,
       widget.prevImpact,
     );
-print("=== UPDATE IMPACT ===");
-print(aiService.getTotalImpact());
 
-
+    if (!mounted) return;
     setState(() {
       data = result;
-      fullText = result["scene"];
+      fullText = result["scene"] ?? "Terjadi kondisi ketidakpastian tinggi (force majeure/cuaca ekstrem). Pilih langkah adaptif.";
       isLoading = false;
     });
 
@@ -61,7 +62,7 @@ print(aiService.getTotalImpact());
 
   void _typingEffect() async {
     for (int i = 0; i < fullText.length; i++) {
-      await Future.delayed(const Duration(milliseconds: 18));
+      await Future.delayed(const Duration(milliseconds: 16));
       if (!mounted) return;
       setState(() {
         displayedText += fullText[i];
@@ -69,32 +70,32 @@ print(aiService.getTotalImpact());
     }
   }
 
-  /// 🔥 PILIHAN
   void chooseAI(Map choice, int index) {
     if (selected != null) return;
 
     HapticFeedback.mediumImpact();
-    final impact = choice["impact"];
+    final impact = choice["impact"] as Map<String, dynamic>;
 
-    /// 🔥 efek tambahan kalau pilihan buruk
     if (index == 0) {
       HapticFeedback.heavyImpact();
     }
+
     setState(() {
       selected = index.toString();
       feedback = choice["feedback"];
-          selectedImpact = choice["impact"]; // 🔥 INI WAJIB
-
+      selectedImpact = impact;
     });
 
-      aiService.addHistory(
-    scene: "Scene 4",
-    choice: choice["text"],
-    impact: impact,
-  );
+    aiService.addHistory(
+      scene: "Scene 5 - Uncertainty",
+      choice: choice["text"],
+      impact: impact,
+    );
+
     aiService.updateImpact(selectedImpact!);
 
     Future.delayed(const Duration(milliseconds: 500), () {
+      if (!mounted) return;
       setState(() {
         readyToNext = true;
       });
@@ -104,39 +105,19 @@ print(aiService.getTotalImpact());
   void goNext() {
     if (!readyToNext) return;
 
-//     Navigator.pushReplacementNamed(
-//   context,
-//   '/scene6',
-//   arguments: {
-//     "total": {
-//       "cost": widget.prevImpact["cost"],
-//       "time": widget.prevImpact["time"],
-//       "risk": widget.prevImpact["risk"],
-//     }
-//   },
-// );
-
-Navigator.pushReplacementNamed(
-    context,
-    '/scene7',
-    arguments: {
-      "total": {
-        "cost": aiService.totalImpact["cost"] ?? 0,
-        "time": aiService.totalImpact["time"] ?? 0,
-        "risk": aiService.totalImpact["risk"] ?? 0,
-      }
-    },
-  );
+    Navigator.pushReplacementNamed(
+      context,
+      '/scene7',
+      arguments: {
+        "total": {
+          "cost": aiService.totalImpact["cost"] ?? 0,
+          "time": aiService.totalImpact["time"] ?? 0,
+          "risk": aiService.totalImpact["risk"] ?? 0,
+        }
+      },
+    );
   }
 
-  /// 🔥 warna feedback
-  Color getFeedbackColor() {
-    if (selected == "0") return Colors.red;
-    if (selected == "1") return Colors.orange;
-    return Colors.blue;
-  }
-
-  /// 🔥 ekspresi karakter
   String getCharacterImage() {
     if (selected == "0") {
       return "assets/AssetGame/player_woried.png";
@@ -145,7 +126,7 @@ Navigator.pushReplacementNamed(
     } else if (selected == "2") {
       return "assets/AssetGame/player_confident.png";
     }
-    return "assets/AssetGame/player_woried.png";
+    return "assets/AssetGame/player_thinking.png";
   }
 
   @override
@@ -153,257 +134,261 @@ Navigator.pushReplacementNamed(
     return GestureDetector(
       onTap: goNext,
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
+        backgroundColor: RisproColors.background,
+        appBar: const RisproAppBar(title: "Pos 4: Uncertainty Decision"),
         body: SafeArea(
           child: isLoading
-              ? const Center(child: CircularProgressIndicator())
+              ? const Center(
+                  child: CircularProgressIndicator(color: RisproColors.uncertainty),
+                )
               : SingleChildScrollView(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 840),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // 1. Progress Journey Header
+                          const RisproProgressJourney(
+                            currentStep: 4,
+                            totalSteps: 5,
+                            stageName: "Uncertainty (Ketidakpastian Tinggi)",
+                            subtitle: "Informasi terbatas. Ambil keputusan adaptif & tanggap risiko.",
+                          ),
 
-                      /// 🔥 HEADER
-                      Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: Colors.purple.shade100,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: const Row(
-                          children: [
-                            Icon(Icons.help, color: Colors.purple),
-                            SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                "❓ Uncertainty: kondisi tidak pasti",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF6B21A8),
-                                ),
-                              ),
+                          const SizedBox(height: 14),
+
+                          // 2. State Badge & Vendor Card Snippet
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: RisproColors.border, width: 1),
+                              boxShadow: RisproColors.cardShadow,
                             ),
-                          ],
-                        ),
-                      ).animate().fade().slideY(begin: -0.2),
-
-                      const SizedBox(height: 20),
-
-                      /// 🔥 VENDOR
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [primary, Colors.blue.shade400],
-                          ),
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: primary.withOpacity(0.3),
-                              blurRadius: 20,
-                            )
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.business, color: Colors.white),
-                            const SizedBox(width: 10),
-                            Text(
-                              widget.vendor.name,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ).animate().scale().fade(),
-
-                      const SizedBox(height: 20),
-
-                      /// 🔥 CHARACTER (DYNAMIC EXPRESSION)
-                      Center(
-                        child: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 400),
-                          transitionBuilder: (child, anim) =>
-                              ScaleTransition(scale: anim, child: child),
-                          child: Image.asset(
-                            getCharacterImage(),
-                            key: ValueKey(selected),
-                            height: 110,
-                          ),
-                        )
-                            .animate(onPlay: (c) => c.repeat())
-                            .moveY(begin: -4, end: 4, duration: 1200.ms)
-                            .then()
-                            .moveY(begin: 4, end: -4, duration: 1200.ms),
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      /// 🔥 STORY
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(18),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black12,
-                              blurRadius: 10,
-                            )
-                          ],
-                        ),
-                        child: Text(
-                          displayedText,
-                          style: const TextStyle(
-                            color: Color(0xFF1E293B),
-                            fontSize: 15,
-                            height: 1.7,
-                          ),
-                        ),
-                      ).animate().fade(),
-
-                      const SizedBox(height: 20),
-
-                      /// 🔥 OPTIONS
-                      if (feedback == null)
-                        ...data!["choices"].asMap().entries.map<Widget>((entry) {
-                          int index = entry.key;
-                          var choice = entry.value;
-                          return _optionAI(choice, index);
-                        }).toList(),
-
-                      /// 🔥 FEEDBACK CENTER
-                      if (feedback != null)
-                        Center(
-                          child: Column(
-                            children: [
-                              Container(
-                                width: double.infinity,
-                                margin: const EdgeInsets.only(top: 20),
-                                padding: const EdgeInsets.all(22),
-                                decoration: BoxDecoration(
-                                  color: getFeedbackColor().withOpacity(0.12),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(
-                                    color:
-                                        getFeedbackColor().withOpacity(0.4),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 46,
+                                  height: 46,
+                                  decoration: BoxDecoration(
+                                    color: RisproColors.uncertaintyBg,
+                                    borderRadius: BorderRadius.circular(14),
+                                    border: Border.all(color: RisproColors.uncertainty.withValues(alpha: 0.3)),
                                   ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color:
-                                          getFeedbackColor().withOpacity(0.2),
-                                      blurRadius: 20,
-                                    )
-                                  ],
+                                  child: const Icon(Icons.help_outline_rounded, color: RisproColors.uncertainty, size: 24),
                                 ),
-                                child: Column(
-                                  children: [
-                                    Icon(
-                                      selected == "0"
-                                          ? Icons.warning
-                                          : selected == "1"
-                                              ? Icons.psychology
-                                              : Icons.auto_graph,
-                                      size: 32,
-                                      color: getFeedbackColor(),
-                                    ),
-                                    const SizedBox(height: 10),
-                                    Text(
-                                      feedback!,
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontSize: 15,
-                                        height: 1.6,
-                                        fontWeight: FontWeight.w600,
-                                        color: getFeedbackColor(),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              widget.vendor.name,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: GoogleFonts.poppins(
+                                                fontWeight: FontWeight.w700,
+                                                fontSize: 15,
+                                                color: RisproColors.textMain,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          const RisproDecisionStateBadge(
+                                            stateType: RisproDecisionStateType.uncertainty,
+                                          ),
+                                        ],
                                       ),
-                                    ),
-                                  ],
-                                ),
-                              ).animate().scale().fade(),
-
-                              const SizedBox(height: 20),
-
-                              if (readyToNext)
-                                const Text(
-                                  "Tap dimana saja untuk lanjut →",
-                                  style: TextStyle(
-                                    color: Color(0xFF2563EB),
-                                    fontWeight: FontWeight.bold,
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        "Situasi: Kondisi Eksternal Tidak Terduga",
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 12,
+                                          color: RisproColors.textSecondary,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                )
-                                    .animate(onPlay: (c) => c.repeat())
-                                    .fade(begin: 0.3, end: 1),
-                            ],
-                          ),
-                        ),
+                                ),
+                              ],
+                            ),
+                          ).animate().fade().slideY(begin: -0.1),
 
-                      const SizedBox(height: 30),
+                          const SizedBox(height: 14),
 
-                      const Center(
-                        child: Text(
-                          "Keputusan dalam ketidakpastian membutuhkan strategi adaptif.",
-                          style: TextStyle(
-                            color: Color(0xFF64748B),
-                          ),
-                        ),
+                          // 3. Narrative Dialogue & Dynamic Character
+                          Container(
+                            padding: const EdgeInsets.all(18),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(22),
+                              border: Border.all(color: RisproColors.border, width: 1.2),
+                              boxShadow: RisproColors.cardShadow,
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                CircleAvatar(
+                                  radius: 28,
+                                  backgroundColor: RisproColors.surfaceSubtle,
+                                  child: AnimatedSwitcher(
+                                    duration: const Duration(milliseconds: 300),
+                                    child: Image.asset(
+                                      getCharacterImage(),
+                                      key: ValueKey(selected),
+                                      height: 52,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "Skenario Ketidakpastian Ekstrem",
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w700,
+                                          color: RisproColors.uncertainty,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        displayedText,
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                          color: RisproColors.textMain,
+                                          height: 1.5,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ).animate().fade(delay: 200.ms),
+
+                          const SizedBox(height: 20),
+
+                          // 4. Decision Choices List
+                          if (feedback == null && data != null && data!["choices"] != null) ...[
+                            Text(
+                              "Tentukan Respons Adaptif Proyek:",
+                              style: GoogleFonts.poppins(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: RisproColors.textMain,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            ...List.generate(
+                              (data!["choices"] as List).length,
+                              (index) {
+                                final choice = data!["choices"][index] as Map;
+                                return RisproDecisionCard(
+                                  index: index,
+                                  text: choice["text"] ?? "-",
+                                  subtitle: "Pilihan fleksibel dalam kondisi minim data",
+                                  impact: choice["impact"] as Map<String, dynamic>?,
+                                  isSelected: selected == index.toString(),
+                                  onTap: () => chooseAI(choice, index),
+                                );
+                              },
+                            ),
+                          ],
+
+                          // 5. Feedback Callout
+                          if (feedback != null) ...[
+                            Container(
+                              padding: const EdgeInsets.all(22),
+                              decoration: BoxDecoration(
+                                color: RisproColors.uncertaintyBg,
+                                borderRadius: BorderRadius.circular(22),
+                                border: Border.all(
+                                  color: RisproColors.uncertainty.withValues(alpha: 0.5),
+                                  width: 1.5,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: RisproColors.uncertainty.withValues(alpha: 0.15),
+                                    blurRadius: 18,
+                                    offset: const Offset(0, 6),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                children: [
+                                  const Icon(
+                                    Icons.psychology_rounded,
+                                    color: RisproColors.uncertainty,
+                                    size: 40,
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    "Analisis Respons Ketidakpastian",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w700,
+                                      color: const Color(0xFF5A2A9A),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    feedback!,
+                                    textAlign: TextAlign.center,
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      color: RisproColors.textMain,
+                                      height: 1.5,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(color: RisproColors.uncertainty.withValues(alpha: 0.4)),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Flexible(
+                                          child: Text(
+                                            "Ketuk layar untuk lanjut ke Analisis Profil Risiko →",
+                                            textAlign: TextAlign.center,
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w700,
+                                              color: RisproColors.primary,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ).animate().scale(duration: 350.ms).fade(),
+                          ],
+
+                          const SizedBox(height: 24),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
         ),
       ),
-    );
-  }
-
-  /// 🔥 OPTION UI
-  Widget _optionAI(Map choice, int index) {
-    final isSelected = selected == index.toString();
-
-    return GestureDetector(
-      onTap: () => chooseAI(choice, index),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? Colors.purple.withOpacity(0.1)
-              : Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isSelected ? Colors.purple : Colors.black12,
-            width: isSelected ? 2 : 1,
-          ),
-          boxShadow: [
-            if (isSelected)
-              BoxShadow(
-                color: Colors.purple.withOpacity(0.3),
-                blurRadius: 12,
-              )
-          ],
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.circle,
-                color: isSelected ? Colors.purple : Colors.grey),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                choice["text"],
-                style: TextStyle(
-                  fontWeight: FontWeight.w500,
-                  color: isSelected
-                      ? Colors.purple
-                      : const Color(0xFF1E293B),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ).animate().fade().slideX(begin: 0.2),
     );
   }
 }
